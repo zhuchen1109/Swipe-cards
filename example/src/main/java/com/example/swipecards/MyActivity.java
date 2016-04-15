@@ -37,7 +37,7 @@ public class MyActivity extends Activity {
 
         al = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
-            al.add("page1:" + i);
+            al.add("page0:" + i);
         }
 
         arrayAdapter = new ArrayAdapter<String>(this, R.layout.item, R.id.helloText, al ){

@@ -107,10 +107,8 @@ public class SwipeFlingView extends AdapterView {
         return converChildView(mActiveCard);
     }
 
-
     @Override
     public void requestLayout() {
-        log("requestLayout" + ";mInLayout:" + mInLayout);
         if (!mInLayout) {
             super.requestLayout();
         }
@@ -425,8 +423,8 @@ public class SwipeFlingView extends AdapterView {
         this.MAX_VISIBLE = MAX_VISIBLE;
     }
 
-    public void setMinStackInAdapter(int MIN_ADAPTER_STACK) {
-        this.MIN_ADAPTER_STACK = MIN_ADAPTER_STACK;
+    public void setMinStackInAdapter(int minAdapterStack) {
+        this.MIN_ADAPTER_STACK = minAdapterStack;
     }
 
     @Override
@@ -475,7 +473,13 @@ public class SwipeFlingView extends AdapterView {
     private class AdapterDataSetObserver extends DataSetObserver {
         @Override
         public void onChanged() {
-            requestLayout();
+            post(new Runnable() {
+                @Override
+                public void run() {
+                    requestLayout();
+                }
+            });
+
         }
 
         @Override

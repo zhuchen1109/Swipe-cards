@@ -27,7 +27,7 @@ public class SwipeFlingView extends AdapterView {
     private static final String TAG = SwipeFlingView.class.getSimpleName();
 
     private int MAX_VISIBLE = 4;
-    private int MIN_ADAPTER_STACK = 1;
+    private int MIN_ADAPTER_STACK = 2;
     private float ROTATION_DEGREES = 15.f;
     private float SCALE = 0.93f;
     private float[] CHILD_SCALE_BY_INDEX;
@@ -198,7 +198,7 @@ public class SwipeFlingView extends AdapterView {
         }
 
         mInLayout = false;
-        if ((adapterCount - 1 - mCurPositon) <= MIN_ADAPTER_STACK) mFlingListener.onAdapterAboutToEmpty(adapterCount);
+        if ((adapterCount - mCurPositon) == MIN_ADAPTER_STACK) mFlingListener.onAdapterAboutToEmpty(adapterCount);
     }
 
     private void resetChildView(View childView) {

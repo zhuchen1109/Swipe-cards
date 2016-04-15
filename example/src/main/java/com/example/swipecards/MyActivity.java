@@ -37,7 +37,7 @@ public class MyActivity extends Activity {
 
         al = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
-            al.add("xml" + i);
+            al.add("page1:" + i);
         }
 
         arrayAdapter = new ArrayAdapter<String>(this, R.layout.item, R.id.helloText, al ){
@@ -89,12 +89,15 @@ public class MyActivity extends Activity {
                 //arrayAdapter.notifyDataSetChanged();
                 Log.d("LIST", "notified itemsInAdapter:" + itemsInAdapter + ";loadNum:" + loadNum);
                 //i++;
-                if (loadNum < 1) {
-                    for (int i = 0; i < 4; i++) {
-                        al.add("ext" + i);
+                //test mulit page load data
+                if (loadNum < 2) {
+                    loadNum++;
+                    int count = 4;
+                    for (int i = 0; i < count; i++) {
+                        al.add("page" + loadNum + ":" + i);
                     }
                     arrayAdapter.notifyDataSetChanged();
-                    loadNum++;
+
                 }
             }
 

@@ -367,6 +367,7 @@ public class SwipeFlingView extends AdapterView {
                     @Override
                     public void onCardExited() {
                         mCurPositon += 1;
+                        mActiveCard.setOnTouchListener(null);
                         mRecycleBin.removeActiveView(mActiveCard);
                         removeViewInLayout(mActiveCard);
                         mActiveCard = null;

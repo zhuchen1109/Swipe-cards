@@ -158,7 +158,6 @@ public class SwipeFlingView extends AdapterView {
                             }
                             log("RecycleBin startingIndex:" + startingIndex + ";recycleActiveIndex:" + recycleActiveIndex);
                             View recycleView = mRecycleBin.getAndResetRecycleView();
-                            resetChildView(recycleView);
                             View newUnderChild = mAdapter.getView(position, converChildView(recycleView), this);
                             newUnderChild = makeAndAddView(0, newUnderChild);
                             mRecycleBin.addActiveView(newUnderChild, recycleActiveIndex);
@@ -197,15 +196,6 @@ public class SwipeFlingView extends AdapterView {
 
         mInLayout = false;
         if ((adapterCount - mCurPositon) == MIN_ADAPTER_STACK) mFlingListener.onAdapterAboutToEmpty(adapterCount);
-    }
-
-    private void resetChildView(View childView) {
-        if (childView == null) return;
-        childView.setTranslationX(0.f);
-        childView.setTranslationY(0.f);
-        childView.setScaleX(1.f);
-        childView.setScaleY(1.f);
-        childView.setRotation(0);
     }
 
     private void layoutChildren(int startingIndex, int adapterCount) {
@@ -366,12 +356,17 @@ public class SwipeFlingView extends AdapterView {
 
                     @Override
                     public void onCardExited() {
-                        mCurPositon += 1;
-                        mActiveCard.setOnTouchListener(null);
-                        mRecycleBin.removeActiveView(mActiveCard);
-                        removeViewInLayout(mActiveCard);
-                        mActiveCard = null;
-                        mFlingListener.removeFirstObjectInAdapter();
+                        View activeCard = mActiveCard;
+                        if (activeCard == null) {
+                            return;
+                        } else {
+                            mCurPositon += 1;
+                            activeCard.setOnTouchListener(null);
+                            mRecycleBin.removeActiveView(activeCard);
+                            removeViewInLayout(activeCard);
+                            mActiveCard = null;
+                            mFlingListener.removeFirstObjectInAdapter();
+                        }
                         requestLayout();
                     }
 
@@ -521,6 +516,7 @@ public class SwipeFlingView extends AdapterView {
                 if (view == mActiveViews.get(i)) {
                     mActiveViews.remove(i);
                     mRecycleView = view;
+                    resetChildView(mRecycleView);
                     mActiveViews.add(0, null);
                     break;
                 }
@@ -565,6 +561,16 @@ public class SwipeFlingView extends AdapterView {
                 return false;
             }
             return true;
+        }
+
+        private void resetChildView(View childView) {
+            if (childView == null) return;
+            childView.setTranslationX(0.f);
+            childView.setTranslationY(0.f);
+            childView.setScaleX(1.f);
+            childView.setScaleY(1.f);
+            childView.setRotation(0);
+            childView.animate().setListener(null);
         }
 
         private void pritfViews(String tag) {
@@ -614,7 +620,7 @@ public class SwipeFlingView extends AdapterView {
 
     private void log(String log) {
         if (DEBUG && true) {
-            Log.v(TAG, log);
+            Log.d(TAG, log);
         }
     }
 

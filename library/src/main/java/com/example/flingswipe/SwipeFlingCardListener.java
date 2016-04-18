@@ -238,6 +238,9 @@ public class SwipeFlingCardListener implements View.OnTouchListener {
 
 
     public void onSelected(final boolean isLeft, float exitY, long duration, final boolean triggerByTouchMove) {
+        if (isAnimationRunning) {
+            return;
+        }
         isAnimationRunning = true;
         float exitX;
         if (isLeft) {
@@ -245,7 +248,6 @@ public class SwipeFlingCardListener implements View.OnTouchListener {
         } else {
             exitX = parentWidth + getRotationWidthOffset();
         }
-
         this.frame.animate()
                 .setDuration(duration)
                 .setInterpolator(new AccelerateInterpolator())
@@ -267,6 +269,17 @@ public class SwipeFlingCardListener implements View.OnTouchListener {
                         } else {
                             mFlingListener.onCardExited();
                             mFlingListener.rightExit(frame, dataObject, triggerByTouchMove);
+                        }
+                        if (frame != null) {
+                            frame.animate().setListener(null);
+                        }
+                        isAnimationRunning = false;
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                        if (frame != null) {
+                            frame.animate().setListener(null);
                         }
                         isAnimationRunning = false;
                     }

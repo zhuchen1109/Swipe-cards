@@ -40,7 +40,7 @@ public class MyActivity extends Activity {
 
 
         al = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 30; i++) {
             al.add("page0:" + i);
         }
 

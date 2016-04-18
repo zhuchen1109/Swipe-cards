@@ -7,11 +7,13 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.flingswipe.SwipeFlingView;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -23,6 +25,8 @@ public class MyActivity extends Activity {
     private ArrayList<String> al;
     private ArrayAdapter<String> arrayAdapter;
     private int i;
+
+    private int[] imgRes = new int[] {R.drawable.test1, R.drawable.test2, R.drawable.test3, R.drawable.test4};
 
     @InjectView(R.id.frame)
     SwipeFlingView flingContainer;
@@ -45,6 +49,9 @@ public class MyActivity extends Activity {
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
                 view.setTag(getItem(position));
+                ImageView iv = (ImageView) view.findViewById(R.id.img);
+                Random random = new Random();
+                iv.setImageResource(imgRes[random.nextInt(4)]);
                 return view;
             }
 

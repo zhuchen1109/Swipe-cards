@@ -6,11 +6,16 @@
     android:layout_height="260dp"
     android:layout_marginTop="120dp">
 
+    <ImageView android:id="@+id/img"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        />
+
     <TextView
         android:id="@+id/helloText"
         android:textSize="40sp"
         android:textColor="@android:color/white"
-        android:background="#ff39"
         android:gravity="center"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

@@ -188,11 +188,11 @@ public class SwipeFlingCardListener implements View.OnTouchListener {
     private boolean resetCardViewOnStack() {
         if (movedBeyondLeftBorder()) {
             // Left Swipe
-            onSelected(true, getExitPoint(-objectW), 300, true);
+            onSelected(true, getExitPoint(-objectW), 200, true);
             mFlingListener.onScroll(-1.0f);
         } else if (movedBeyondRightBorder()) {
             // Right Swipe
-            onSelected(false, getExitPoint(parentWidth), 300, true);
+            onSelected(false, getExitPoint(parentWidth), 200, true);
             mFlingListener.onScroll(1.0f);
         } else {
             float abslMoveDistance = Math.abs(aPosX - objectX);
@@ -263,6 +263,15 @@ public class SwipeFlingCardListener implements View.OnTouchListener {
 
                     @Override
                     public void onAnimationEnd(Animator animation) {
+                        onEnd(animation);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                        onEnd(animation);
+                    }
+
+                    private void  onEnd(Animator animator) {
                         if (isLeft) {
                             mFlingListener.onCardExited();
                             mFlingListener.leftExit(frame, dataObject, triggerByTouchMove);
@@ -276,13 +285,6 @@ public class SwipeFlingCardListener implements View.OnTouchListener {
                         isAnimationRunning = false;
                     }
 
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-                        if (frame != null) {
-                            frame.animate().setListener(null);
-                        }
-                        isAnimationRunning = false;
-                    }
                 })
                 .rotation(getExitRotation(isLeft));
     }

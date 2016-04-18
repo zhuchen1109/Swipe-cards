@@ -340,17 +340,16 @@ public class SwipeFlingView extends AdapterView {
                 childTop = getPaddingTop() + lp.topMargin;
                 break;
         }
-
         child.layout(childLeft, childTop, childLeft + w, childTop + h);
         return child;
     }
 
     private void setTopView() {
         if (getChildCount() > 0) {
-
             mActiveCard = getChildAt(LAST_OBJECT_IN_STACK);
             if (mActiveCard != null) {
-
+                //TODO 快速向左短距离划，再向右滑时，这个card view的tranX/tranY值前面矫正了，但在这又被恢复了，原因未知
+                resetChildView(mActiveCard);
                 flingCardListener = new SwipeFlingCardListener(mActiveCard, mAdapter.getItem(0),
                         ROTATION_DEGREES, new SwipeFlingCardListener.FlingListener() {
 
@@ -457,6 +456,16 @@ public class SwipeFlingView extends AdapterView {
         return new SwipeLayoutParame(getContext(), attrs);
     }
 
+    private void resetChildView(View childView) {
+        if (childView == null) return;
+        childView.setTranslationX(0.f);
+        childView.setTranslationY(0.f);
+        childView.setScaleX(1.f);
+        childView.setScaleY(1.f);
+        childView.setRotation(0);
+        childView.animate().setListener(null);
+    }
+
     @Override
     public void setSelection(int i) {
         throw new UnsupportedOperationException("Not supported");
@@ -561,16 +570,6 @@ public class SwipeFlingView extends AdapterView {
                 return false;
             }
             return true;
-        }
-
-        private void resetChildView(View childView) {
-            if (childView == null) return;
-            childView.setTranslationX(0.f);
-            childView.setTranslationY(0.f);
-            childView.setScaleX(1.f);
-            childView.setScaleY(1.f);
-            childView.setRotation(0);
-            childView.animate().setListener(null);
         }
 
         private void pritfViews(String tag) {

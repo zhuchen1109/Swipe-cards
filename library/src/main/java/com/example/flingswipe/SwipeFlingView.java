@@ -138,7 +138,7 @@ public class SwipeFlingView extends AdapterView {
         mInLayout = true;
         final int adapterCount = mAdapter.getCount();
 
-        log("onLayout isVaildBin:" + mRecycleBin.isVaildBin() + ";mCurPositon:" + mCurPositon + ";adapterCount:" + adapterCount);
+        //log("onLayout isVaildBin:" + mRecycleBin.isVaildBin() + ";mCurPositon:" + mCurPositon + ";adapterCount:" + adapterCount);
         if (adapterCount == 0 || mCurPositon >= adapterCount) {
             removeAllViewsInLayout();
         } else {
@@ -147,7 +147,7 @@ public class SwipeFlingView extends AdapterView {
                 if (adapterCount > MAX_VISIBLE) {
                     int curChildCount = getChildCount();
                     while (startingIndex < Math.min(adapterCount, MAX_VISIBLE)) {
-                        log("curChildCount:"+curChildCount);
+                        //log("curChildCount:"+curChildCount);
                         //计算要复用view的index
                         int recycleActiveIndex = curChildCount >= MAX_VISIBLE -1 ?
                                 startingIndex : MAX_VISIBLE - 1 - (curChildCount + startingIndex);
@@ -156,7 +156,7 @@ public class SwipeFlingView extends AdapterView {
                             if (position >= adapterCount) {
                                 break;
                             }
-                            log("RecycleBin startingIndex:" + startingIndex + ";recycleActiveIndex:" + recycleActiveIndex);
+                            //log("RecycleBin startingIndex:" + startingIndex + ";recycleActiveIndex:" + recycleActiveIndex);
                             View recycleView = mRecycleBin.getAndResetRecycleView();
                             View newUnderChild = mAdapter.getView(position, converChildView(recycleView), this);
                             newUnderChild = makeAndAddView(0, newUnderChild);
@@ -511,11 +511,11 @@ public class SwipeFlingView extends AdapterView {
             //int pos = lp.position;
             if (DEBUG) {
                 //log(view + ";pos:" + pos);
-                pritfViews("preadd");
+                //pritfViews("preadd");
             }
             View itemView = mActiveViews.set(pos, view);
             if (DEBUG) {
-                pritfViews("postadd");
+                //pritfViews("postadd");
             }
         }
 

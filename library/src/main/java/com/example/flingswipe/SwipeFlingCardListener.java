@@ -6,10 +6,15 @@ import android.animation.ValueAnimator;
 import android.graphics.PointF;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.VelocityTracker;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
+import android.widget.Scroller;
 
 
 public class SwipeFlingCardListener implements View.OnTouchListener {
@@ -43,6 +48,9 @@ public class SwipeFlingCardListener implements View.OnTouchListener {
     private final Object obj = new Object();
     private boolean isAnimationRunning = false;
     private float MAX_COS = (float) Math.cos(Math.toRadians(45));
+    private Scroller mScroller;
+    private VelocityTracker mVelocityTracker;
+    private int mMinFlingVelocity, mMaxFlingVelocity;
 
     public SwipeFlingCardListener(View frame, Object itemAtPosition, FlingListener flingListener) {
         this(frame, itemAtPosition, 15f, flingListener);
@@ -61,9 +69,19 @@ public class SwipeFlingCardListener implements View.OnTouchListener {
         this.BASE_ROTATION_DEGREES = rotation_degrees;
         this.mFlingListener = flingListener;
 
+        this.mScroller = new Scroller(frame.getContext());
+        ViewConfiguration config = ViewConfiguration.get(frame.getContext());
+        mMinFlingVelocity = config.getScaledMinimumFlingVelocity();
+        mMaxFlingVelocity = config.getScaledMaximumFlingVelocity();
+        mVelocityTracker = VelocityTracker.obtain();
     }
 
     public boolean onTouch(View view, MotionEvent event) {
+
+        if (mVelocityTracker == null) {
+            mVelocityTracker = VelocityTracker.obtain();
+        }
+        mVelocityTracker.addMovement(event);
 
         switch (event.getAction() & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN:
@@ -138,10 +156,11 @@ public class SwipeFlingCardListener implements View.OnTouchListener {
                 final float dx = xMove - aDownTouchX;
                 final float dy = yMove - aDownTouchY;
 
-
                 // Move the frame
                 aPosX += dx;
                 aPosY += dy;
+
+
 
                 // calculate the rotation degrees
                 float distobjectX = aPosX - objectX;
@@ -236,8 +255,18 @@ public class SwipeFlingCardListener implements View.OnTouchListener {
         return 3 * parentWidth / 4.f;
     }
 
+    public void computeScroll() {
+        boolean b = mScroller.computeScrollOffset();
+        if (b) {
+            int curX = mScroller.getCurrX();
+            int curY = mScroller.getCurrY();
+            frame.setX(curX);
+            frame.setY(curY);
+            frame.postInvalidate();
+        }
+    }
 
-    public void onSelected(final boolean isLeft, float exitY, long duration, final boolean triggerByTouchMove) {
+    public void onSelected(final boolean isLeft, float exitY, final int duration, final boolean triggerByTouchMove) {
         if (isAnimationRunning) {
             return;
         }
@@ -248,45 +277,61 @@ public class SwipeFlingCardListener implements View.OnTouchListener {
         } else {
             exitX = parentWidth + getRotationWidthOffset();
         }
-        this.frame.animate()
-                .setDuration(duration)
-                .setInterpolator(new AccelerateInterpolator())
-                .x(exitX)
-                .y(exitY)
-                .setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-                        if (!triggerByTouchMove) {
-                            startCardViewAnimator(0.f, 1.f, 250);
+
+        final VelocityTracker tracker = mVelocityTracker;
+        tracker.computeCurrentVelocity(1000, mMaxFlingVelocity);
+        float vx = tracker.getXVelocity();
+        float vy = tracker.getYVelocity();
+        if (false && triggerByTouchMove && Math.abs(vx) > mMinFlingVelocity) {
+            mScroller.setFriction(0.009F);
+            mScroller.startScroll((int) aPosX, (int) aPosY, (int) (exitX - aPosX), (int) (exitY - aPosY), 1800);
+            //mScroller.fling((int) aPosX, (int) aPosY, (int) vx, (int) vy, 0, (int) exitX, 0, (int) exitY);
+            //mScroller.setFinalX((int) exitX);
+            //mScroller.setFinalY((int) exitY);
+            frame.invalidate();
+            /*Log.d("xxxx", (int) aPosX+";"+(int) aPosY+";"+0+";"+(int) exitX+";"+(int) exitY + ";"+mScroller.getFinalX()+";"+mScroller.getFinalY()+":"+mScroller.getDuration()
+                +";vx:"+vx+";vy:"+vy);*/
+        } else {
+            this.frame.animate()
+                    .setDuration(duration)
+                    .setInterpolator(sInterpolator)
+                    .x(exitX)
+                    .y(exitY)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationStart(Animator animation) {
+                            if (!triggerByTouchMove) {
+                                startCardViewAnimator(0.f, 1.f, duration);
+                            }
                         }
-                    }
 
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        onEnd(animation);
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-                        onEnd(animation);
-                    }
-
-                    private void  onEnd(Animator animator) {
-                        if (isLeft) {
-                            mFlingListener.onCardExited();
-                            mFlingListener.leftExit(frame, dataObject, triggerByTouchMove);
-                        } else {
-                            mFlingListener.onCardExited();
-                            mFlingListener.rightExit(frame, dataObject, triggerByTouchMove);
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            onEnd(animation);
                         }
-                        if (frame != null) {
-                            frame.animate().setListener(null);
-                        }
-                        isAnimationRunning = false;
-                    }
 
-                })
-                .rotation(getExitRotation(isLeft));
+                        @Override
+                        public void onAnimationCancel(Animator animation) {
+                            onEnd(animation);
+                        }
+
+                        private void onEnd(Animator animator) {
+                            if (isLeft) {
+                                mFlingListener.onCardExited();
+                                mFlingListener.leftExit(frame, dataObject, triggerByTouchMove);
+                            } else {
+                                mFlingListener.onCardExited();
+                                mFlingListener.rightExit(frame, dataObject, triggerByTouchMove);
+                            }
+                            if (frame != null) {
+                                frame.animate().setListener(null);
+                            }
+                            isAnimationRunning = false;
+                        }
+
+                    })
+                    .rotation(getExitRotation(isLeft));
+        }
     }
 
     /**
@@ -366,6 +411,52 @@ public class SwipeFlingCardListener implements View.OnTouchListener {
         void onClick(Object dataObject);
 
         void onScroll(float scrollProgressPercent);
+    }
+
+    private static final Interpolator sInterpolator = new Interpolator() {
+        public float getInterpolation(float t) {
+            /*t -= 1.0f;
+            return t * t * t + 1.0f;*/
+            //return (float)(1.0f - Math.pow((1.0f - t), 2));
+            return t;
+        }
+    };
+
+    static class ViscousFluidInterpolator implements Interpolator {
+        /** Controls the viscous fluid effect (how much of it). */
+        private static final float VISCOUS_FLUID_SCALE = 8.0f;
+
+        private static final float VISCOUS_FLUID_NORMALIZE;
+        private static final float VISCOUS_FLUID_OFFSET;
+
+        static {
+
+            // must be set to 1.0 (used in viscousFluid())
+            VISCOUS_FLUID_NORMALIZE = 1.0f / viscousFluid(1.0f);
+            // account for very small floating-point error
+            VISCOUS_FLUID_OFFSET = 1.0f - VISCOUS_FLUID_NORMALIZE * viscousFluid(1.0f);
+        }
+
+        private static float viscousFluid(float x) {
+            x *= VISCOUS_FLUID_SCALE;
+            if (x < 1.0f) {
+                x -= (1.0f - (float)Math.exp(-x));
+            } else {
+                float start = 0.36787944117f;   // 1/e == exp(-1)
+                x = 1.0f - (float)Math.exp(1.0f - x);
+                x = start + x * (1.0f - start);
+            }
+            return x;
+        }
+
+        @Override
+        public float getInterpolation(float input) {
+            final float interpolated = VISCOUS_FLUID_NORMALIZE * viscousFluid(input);
+            if (interpolated > 0) {
+                return interpolated + VISCOUS_FLUID_OFFSET;
+            }
+            return interpolated;
+        }
     }
 
 }

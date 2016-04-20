@@ -627,11 +627,25 @@ public class SwipeFlingView extends AdapterView {
 
         private float mDownX, mDownY;
         private float mTouchSlop;
+        private SwipeFlingCardListener mOnTouchListener;
 
         public SwipeChildContainer(Context context, AttributeSet attrs) {
             super(context, attrs);
             ViewConfiguration conf = ViewConfiguration.get(context);
             mTouchSlop = conf.getScaledTouchSlop();
+        }
+
+        @Override
+        public void setOnTouchListener(OnTouchListener l) {
+            super.setOnTouchListener(l);
+            this.mOnTouchListener = (SwipeFlingCardListener) l;
+        }
+
+        @Override
+        public void computeScroll() {
+            if (mOnTouchListener != null) {
+                mOnTouchListener.computeScroll();
+            }
         }
 
         @Override

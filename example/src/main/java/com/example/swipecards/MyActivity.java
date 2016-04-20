@@ -66,13 +66,6 @@ public class MyActivity extends Activity {
         flingContainer.setAdapter(arrayAdapter);
         flingContainer.setFlingListener(new SwipeFlingView.onSwipeListener() {
             int loadNum = 0;
-            @Override
-            public void removeFirstObjectInAdapter() {
-                // this is the simplest way to delete an object from the Adapter (/AdapterView)
-                //Log.d("LIST", "removed object!");
-                //al.remove(0);
-                //arrayAdapter.notifyDataSetChanged();
-            }
 
             @Override
             public void onLeftCardExit(View view, Object dataObject, boolean triggerByTouchMove) {

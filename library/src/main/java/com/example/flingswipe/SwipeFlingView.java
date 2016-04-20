@@ -364,7 +364,6 @@ public class SwipeFlingView extends AdapterView {
                             mRecycleBin.removeActiveView(activeCard);
                             removeViewInLayout(activeCard);
                             mActiveCard = null;
-                            mFlingListener.removeFirstObjectInAdapter();
                         }
                         requestLayout();
                     }
@@ -606,7 +605,6 @@ public class SwipeFlingView extends AdapterView {
     }
 
     public interface onSwipeListener {
-        void removeFirstObjectInAdapter();
 
         void onLeftCardExit(View view, Object dataObject, boolean triggerByTouchMove);
 

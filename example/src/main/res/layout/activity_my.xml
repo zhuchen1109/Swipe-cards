@@ -13,5 +13,36 @@
 
     <include layout="@layout/buttons" />
 
+    <com.example.flingswipe.SwipeFlingDetailLayut
+        android:id="@+id/detail_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:background="#ffffffff"
+        android:visibility="invisible">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <android.support.v4.view.ViewPager
+                android:id="@+id/first_view"
+                android:layout_width="match_parent"
+                android:layout_height="320dp"/>
+            <View
+                android:id="@+id/detail_anchor"
+                android:layout_width="match_parent"
+                android:layout_height="320dp"
+                android:minHeight="320dp" />
+
+            <LinearLayout android:id="@+id/second_view"
+                android:layout_below="@id/detail_anchor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+            </LinearLayout>
+
+        </RelativeLayout>
+    </com.example.flingswipe.SwipeFlingDetailLayut>
+
 </merge>
 

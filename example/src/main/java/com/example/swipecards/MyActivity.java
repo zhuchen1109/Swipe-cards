@@ -3,13 +3,19 @@ package com.example.swipecards;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.flingswipe.SwipeFlingDetailLayut;
 import com.example.flingswipe.SwipeFlingView;
 
 import java.util.ArrayList;
@@ -29,8 +35,22 @@ public class MyActivity extends Activity {
     private int[] imgRes = new int[] {R.drawable.test1, R.drawable.test2, R.drawable.test3, R.drawable.test4};
 
     @InjectView(R.id.frame)
-    SwipeFlingView flingContainer;
+    SwipeFlingView mSwipeFlingView;
 
+    @InjectView(R.id.detail_layout)
+    SwipeFlingDetailLayut mSwipeFlingDetailLayut;
+
+    @InjectView(R.id.first_view)
+    ViewPager mViewPager;
+
+    private DetailImgsPageAdapter mDetailImgsPageAdapter;
+
+    @InjectView(R.id.second_view)
+    LinearLayout mContainerLayout;
+
+    private View[] mDetailListViews;
+
+    private float mDensity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +58,7 @@ public class MyActivity extends Activity {
         setContentView(R.layout.activity_my);
         ButterKnife.inject(this);
 
+        mDensity = getResources().getDisplayMetrics().density;
 
         al = new ArrayList<>();
         for (int i = 0; i < 30; i++) {
@@ -63,8 +84,8 @@ public class MyActivity extends Activity {
         };
 
 
-        flingContainer.setAdapter(arrayAdapter);
-        flingContainer.setFlingListener(new SwipeFlingView.onSwipeListener() {
+        mSwipeFlingView.setAdapter(arrayAdapter);
+        mSwipeFlingView.setFlingListener(new SwipeFlingView.onSwipeListener() {
             int loadNum = 0;
 
             @Override
@@ -102,23 +123,81 @@ public class MyActivity extends Activity {
             }
 
             @Override
-            public void onScroll(float scrollProgressPercent) {
-                View view = flingContainer.getSelectedView();
-                if (view != null) {
-                    view.findViewById(R.id.item_swipe_right_indicator).setAlpha(scrollProgressPercent < 0 ? -scrollProgressPercent : 0);
-                    view.findViewById(R.id.item_swipe_left_indicator).setAlpha(scrollProgressPercent > 0 ? scrollProgressPercent : 0);
+            public void onScroll(View selectedView, float scrollProgressPercent) {
+                if (selectedView != null) {
+                    selectedView.findViewById(R.id.item_swipe_right_indicator).setAlpha(scrollProgressPercent < 0 ? -scrollProgressPercent : 0);
+                    selectedView.findViewById(R.id.item_swipe_left_indicator).setAlpha(scrollProgressPercent > 0 ? scrollProgressPercent : 0);
                 }
             }
         });
 
 
         // Optionally add an OnItemClickListener
-        flingContainer.setOnItemClickListener(new SwipeFlingView.OnItemClickListener() {
+        mSwipeFlingView.setOnItemClickListener(new SwipeFlingView.OnItemClickListener() {
             @Override
             public void onItemClicked(int itemPosition, Object dataObject) {
                 makeToast(MyActivity.this, "Clicked!");
+                showDetailLayout();
             }
         });
+
+        //init detail
+        LayoutInflater layoutInflater = LayoutInflater.from(this);
+        mDetailListViews = new View[3];
+        for (int i = 0; i < mDetailListViews.length; i++) {
+            View detailItemLayout = layoutInflater.inflate(R.layout.detail_img_item_view, null);
+            mDetailListViews[i] = detailItemLayout;
+        }
+        mDetailImgsPageAdapter = new DetailImgsPageAdapter();
+        mViewPager.setAdapter(mDetailImgsPageAdapter);
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                mDetailListViews[position % 3].setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        makeToast(MyActivity.this, "Detail img Clicked!");
+                        dismissDetailLayout();
+                    }
+                });
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
+        mSwipeFlingDetailLayut.setFirstAndSecondeView(mViewPager, mContainerLayout);
+        initContainerLayout();
+    }
+
+    private void updateDetailImgList() {
+
+    }
+
+    private void initContainerLayout() {
+        TextView tv = new TextView(this);
+        tv.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,  (int) (mDensity * 1000)));
+        tv.setText("我是个大美女，哈哈哈！");
+        mContainerLayout.addView(tv);
+    }
+
+    private void showDetailLayout() {
+        mSwipeFlingDetailLayut.setVisibility(View.VISIBLE);
+        mSwipeFlingView.getSelectedView();
+        updateContainerLayout();
+    }
+
+    private void dismissDetailLayout() {
+        mSwipeFlingDetailLayut.setVisibility(View.INVISIBLE);
+    }
+
+    private void updateContainerLayout() {
 
     }
 
@@ -132,15 +211,39 @@ public class MyActivity extends Activity {
         /**
          * Trigger the right event manually.
          */
-        flingContainer.getTopCardListener().selectRight();
+        mSwipeFlingView.getTopCardListener().selectRight();
     }
 
     @OnClick(R.id.left)
     public void left() {
-        flingContainer.getTopCardListener().selectLeft();
+        mSwipeFlingView.getTopCardListener().selectLeft();
     }
 
+    private class DetailImgsPageAdapter extends PagerAdapter {
 
+        @Override
+        public int getCount() {
+            return 4;
+        }
+
+        @Override
+        public boolean isViewFromObject(View view, Object object) {
+            return view  == object;
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            View view = mDetailListViews[position % 3];
+            container.addView(view);
+            ((ImageView) view.findViewById(R.id.img)).setImageResource(imgRes[position]);
+            return view;
+        }
+
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object) {
+            container.removeView(mDetailListViews[position % 3]);
+        }
+    }
 
 
 }

@@ -104,6 +104,10 @@ public class SwipeFlingView extends AdapterView {
 
     @Override
     public View getSelectedView() {
+        return mActiveCard;
+    }
+
+    private View getInnerSelectedView() {
         return converChildView(mActiveCard);
     }
 
@@ -387,7 +391,7 @@ public class SwipeFlingView extends AdapterView {
 
                     @Override
                     public void onScroll(float scrollProgressPercent) {
-                        mFlingListener.onScroll(scrollProgressPercent);
+                        mFlingListener.onScroll(getInnerSelectedView(), scrollProgressPercent);
                         updateChildrenOffset(scrollProgressPercent);
                     }
                 });
@@ -612,7 +616,7 @@ public class SwipeFlingView extends AdapterView {
 
         void onAdapterAboutToEmpty(int itemsInAdapter);
 
-        void onScroll(float scrollProgressPercent);
+        void onScroll(View selectedView, float scrollProgressPercent);
     }
 
     private void log(String log) {

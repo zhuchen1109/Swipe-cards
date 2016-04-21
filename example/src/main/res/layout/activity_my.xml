@@ -18,7 +18,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
-        android:background="#ffffffff"
         android:visibility="invisible">
         <RelativeLayout
             android:layout_width="match_parent"
@@ -37,6 +36,7 @@
                 android:layout_below="@id/detail_anchor"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="#ffffffff"
                 android:orientation="vertical">
 
             </LinearLayout>

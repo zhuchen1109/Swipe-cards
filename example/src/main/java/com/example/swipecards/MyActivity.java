@@ -1,14 +1,22 @@
 package com.example.swipecards;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v4.view.animation.FastOutSlowInInterpolator;
+import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.Interpolator;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -50,7 +58,7 @@ public class MyActivity extends Activity {
 
     private View[] mDetailListViews;
 
-    private float mDensity;
+    private float mDensity, mScreenHeight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +67,7 @@ public class MyActivity extends Activity {
         ButterKnife.inject(this);
 
         mDensity = getResources().getDisplayMetrics().density;
+        mScreenHeight = getResources().getDisplayMetrics().heightPixels;
 
         al = new ArrayList<>();
         for (int i = 0; i < 30; i++) {
@@ -188,13 +197,151 @@ public class MyActivity extends Activity {
     }
 
     private void showDetailLayout() {
-        mSwipeFlingDetailLayut.setVisibility(View.VISIBLE);
-        mSwipeFlingView.getSelectedView();
         updateContainerLayout();
+        ImageView iv = (ImageView) mSwipeFlingView.getSelectedView().findViewById(R.id.img);
+        int[] location = new int[2];
+        iv.getLocationInWindow(location);
+        int startWidth = iv.getWidth();
+        int startHeight = iv.getHeight();
+        float startX = location[0];
+        float startY = location[1];
+
+        mViewPager.getLocationInWindow(location);
+        int endWidth = mViewPager.getWidth();
+        int endHeight = mViewPager.getHeight();
+        float endX = location[0];
+        float endY = location[1];
+
+        startShowDetailLayoutAnima(startWidth, startHeight, startX, startY, endWidth, endHeight, endX, endY);
+    }
+
+    private void startShowDetailLayoutAnima(int startWidth, int startHeight, float startX, float startY, int endWidth, int endHeight, float endX, float endY) {
+        final float scaleX = (startWidth * 1.f / endWidth * 1.f);
+        final float scaleY = (startHeight * 1.f / endHeight * 1.f);
+        final float dx = startX + startWidth * .5f - (endX + endWidth * .5f);
+        final float dy = startY + startHeight * .5f - (endY + endHeight * .5f);
+
+        mViewPager.setScaleX(scaleX);
+        mViewPager.setScaleY(scaleY);
+        mViewPager.setTranslationX(dx);
+        mViewPager.setTranslationY(dy);
+
+        ValueAnimator viewPagerAnima = ValueAnimator.ofFloat(0.f, 1.f);
+        viewPagerAnima.setInterpolator(sInterpolator);
+        viewPagerAnima.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float frac = animation.getAnimatedFraction();
+                mViewPager.setScaleX(scaleX + (1.f - scaleX) * frac);
+                mViewPager.setScaleY(scaleY + (1.f - scaleY) * frac);
+                mViewPager.setTranslationX(dx * (1.f - frac));
+                mViewPager.setTranslationY(dy * (1.f - frac));
+            }
+        });
+        viewPagerAnima.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                mSwipeFlingDetailLayut.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+            }
+        });
+        viewPagerAnima.setDuration(500);
+
+        mContainerLayout.setTranslationY(mScreenHeight - endY - endHeight);
+        mContainerLayout.animate()
+                .setInterpolator(sInterpolator)
+                .setDuration(500)
+                .translationY(0);
+
+        viewPagerAnima.start();
+
+        Log.d("xxxx", "startWidth:"+startWidth+"startHeight:"+startHeight+";startX:"+startX+";startY:"+startY+";endWidth:"+endWidth+";endHeight:"+endHeight+";endX:"+endX+";endY:"+endY
+            +";scaleX:"+scaleX+";scaleY:"+scaleY+";dx:"+dx+";dy:"+dy+";"+(mScreenHeight - endY - endHeight));
     }
 
     private void dismissDetailLayout() {
-        mSwipeFlingDetailLayut.setVisibility(View.INVISIBLE);
+        ImageView iv = (ImageView) mSwipeFlingView.getSelectedView().findViewById(R.id.img);
+        int[] location = new int[2];
+        iv.getLocationInWindow(location);
+        int startWidth = iv.getWidth();
+        int startHeight = iv.getHeight();
+        float startX = location[0];
+        float startY = location[1];
+
+        mViewPager.getLocationInWindow(location);
+        int endWidth = mViewPager.getWidth();
+        int endHeight = mViewPager.getHeight();
+        float endX = location[0];
+        float endY = location[1];
+        startDismissDetailLayoutAnima(startWidth, startHeight, startX, startY, endWidth, endHeight, endX, endY);
+    }
+
+    private void startDismissDetailLayoutAnima(int startWidth, int startHeight, float startX, float startY, int endWidth, int endHeight, float endX, float endY) {
+        final float scaleX = (startWidth * 1.f / endWidth * 1.f);
+        final float scaleY = (startHeight * 1.f / endHeight * 1.f);
+        final float dx = startX + startWidth * .5f - (endX + endWidth * .5f);
+        final float dy = startY + startHeight * .5f - (endY + endHeight * .5f);
+
+        /*mViewPager.setScaleX(scaleX);
+        mViewPager.setScaleY(scaleY);
+        mViewPager.setTranslationX(dx);
+        mViewPager.setTranslationY(dy);*/
+
+        ValueAnimator viewPagerAnima = ValueAnimator.ofFloat(0.f, 1.f);
+        viewPagerAnima.setInterpolator(sInterpolator);
+        viewPagerAnima.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float frac = 1 - animation.getAnimatedFraction();
+                mViewPager.setScaleX(scaleX + (1.f - scaleX) * frac);
+                mViewPager.setScaleY(scaleY + (1.f - scaleY) * frac);
+                mViewPager.setTranslationX(dx * (1.f - frac));
+                mViewPager.setTranslationY(dy * (1.f - frac));
+            }
+        });
+        viewPagerAnima.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                onEnd(animation);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                onEnd(animation);
+            }
+
+            private void onEnd(Animator animation) {
+                mSwipeFlingDetailLayut.setVisibility(View.INVISIBLE);
+                mViewPager.setScaleX(1.f);
+                mViewPager.setScaleY(1.f);
+                mViewPager.setTranslationX(0.f);
+                mViewPager.setTranslationY(0.f);
+            }
+        });
+        viewPagerAnima.setDuration(500);
+
+        //mContainerLayout.setTranslationY(endHeight);
+        mContainerLayout.animate()
+                .setInterpolator(new DecelerateInterpolator())
+                .setDuration(300)
+                .translationY(mScreenHeight - endY - endHeight);
+
+        viewPagerAnima.start();
+
+        /*Log.d("xxxx", "startWidth:"+startWidth+"startHeight:"+startHeight+";startX:"+startX+";startY:"+startY+";endWidth:"+endWidth+";endHeight:"+endHeight+";endX:"+endX+";endY:"+endY
+            +";scaleX:"+scaleX+";scaleY:"+scaleY+";dx:"+dx+";dy:"+dy);*/
     }
 
     private void updateContainerLayout() {
@@ -245,5 +392,11 @@ public class MyActivity extends Activity {
         }
     }
 
+    private static final Interpolator sInterpolator = new Interpolator() {
+        public float getInterpolation(float t) {
+            t -= 1.0f;
+            return t * t * t * t * t + 1.0f;
+        }
+    };
 
 }

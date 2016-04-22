@@ -226,7 +226,6 @@ public class MyActivity extends Activity {
                     dismissDetailLayout();
                 }
             });
-            print();
             return view;
         }
 
@@ -239,14 +238,6 @@ public class MyActivity extends Activity {
         public void destroyItem(ViewGroup container, int position, Object object) {
 
         }
-
-        void print() {
-            for (int i = 0; i < mDetailListViews.length; i++) {
-                View view = mDetailListViews[i];
-                Log.d("xxxx", "pos:"+i+";parent:" + view.getParent());
-            }
-        }
-
     }
 
 }

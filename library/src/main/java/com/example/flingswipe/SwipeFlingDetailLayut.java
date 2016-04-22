@@ -6,7 +6,6 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
@@ -18,6 +17,7 @@ public class SwipeFlingDetailLayut extends ScrollView {
     private View mSecondView;
     private View mCircleIndicator;
     private float mDensity, mScreenHeight;
+    private SwipeFlingDetailListener mSwipeFlingDetailListener;
 
     public SwipeFlingDetailLayut(Context context) {
         this(context, null);
@@ -189,6 +189,10 @@ public class SwipeFlingDetailLayut extends ScrollView {
         viewPagerAnima.start();
     }
 
+    public void setSwipeFlingDetailListener(SwipeFlingDetailListener swipeFlingDetailListener) {
+        this.mSwipeFlingDetailListener = swipeFlingDetailListener;
+    }
+
     private static final Interpolator sInterpolator = new Interpolator() {
         public float getInterpolation(float t) {
             t -= 1.0f;
@@ -196,8 +200,9 @@ public class SwipeFlingDetailLayut extends ScrollView {
         }
     };
 
-    public interface ISwipeFlingDetail {
-
+    public interface SwipeFlingDetailListener {
+        /*public void onStartDetailLayout(SwipeFlingDetailLayut detailLayout);
+        public void onEndDetailLayout(SwipeFlingDetailLayut detailLayout);*/
     }
 
 }

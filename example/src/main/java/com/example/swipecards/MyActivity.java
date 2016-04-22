@@ -44,6 +44,7 @@ public class MyActivity extends Activity {
 
     private View[] mDetailListViews;
 
+    private int mCurViewPagerIndex;
     private float mDensity;
     private ArrayList<String> al;
     private int[] imgRes = new int[]{R.drawable.test1, R.drawable.test2, R.drawable.test3, R.drawable.test4};
@@ -74,8 +75,7 @@ public class MyActivity extends Activity {
                 View view = super.getView(position, convertView, parent);
                 view.setTag(getItem(position));
                 ImageView iv = (ImageView) view.findViewById(R.id.img);
-                Random random = new Random();
-                iv.setImageResource(imgRes[random.nextInt(4)]);
+                iv.setImageResource(imgRes[position % 4]);
                 return view;
             }
 
@@ -85,7 +85,6 @@ public class MyActivity extends Activity {
                 return s;
             }
         };
-
 
         mSwipeFlingView.setAdapter(arrayAdapter);
         mSwipeFlingView.setFlingListener(new SwipeFlingView.onSwipeListener() {
@@ -182,7 +181,9 @@ public class MyActivity extends Activity {
     }
 
     private void updateDetailImgList() {
-
+        int curCardPos = mSwipeFlingView.getCurPositon();
+        mViewPager.setCurrentItem(curCardPos % 4, false);
+        mCurViewPagerIndex = curCardPos % 4;
     }
 
     private void updateContainerLayout() {
@@ -192,6 +193,10 @@ public class MyActivity extends Activity {
     private void dismissDetailLayout() {
         ImageView iv = (ImageView) mSwipeFlingView.getSelectedView().findViewById(R.id.img);
         mSwipeFlingDetailLayut.dismissDetailLayout(iv);
+        int num = mViewPager.getCurrentItem() - mCurViewPagerIndex;
+        if (num != 0) {
+            iv.setImageResource(imgRes[(mCurViewPagerIndex + num) % 4]);
+        }
     }
 
     static void makeToast(Context ctx, String s) {

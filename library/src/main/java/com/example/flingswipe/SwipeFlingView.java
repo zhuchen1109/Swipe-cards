@@ -453,6 +453,9 @@ public class SwipeFlingView extends AdapterView {
         this.mOnItemClickListener = onItemClickListener;
     }
 
+    public final int getCurPositon() {
+        return mCurPositon;
+    }
 
     @Override
     public LayoutParams generateLayoutParams(AttributeSet attrs) {

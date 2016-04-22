@@ -20,7 +20,6 @@ import com.example.flingswipe.SwipeFlingView;
 import com.example.swipecards.view.CircleIndicator;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -142,22 +141,6 @@ public class MyActivity extends Activity {
         }
         mDetailImgsPageAdapter = new DetailImgsPageAdapter();
         mViewPager.setAdapter(mDetailImgsPageAdapter);
-        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-
-            }
-        });
         mSwipeFlingDetailLayut.setFirstAndSecondeView(mViewPager, mContainerLayout);
         initContainerLayout();
 
@@ -230,13 +213,12 @@ public class MyActivity extends Activity {
 
         @Override
         public Object instantiateItem(ViewGroup container, int position) {
-            Log.d("xxxx", "instantiateItem position:"+position);
-            View view = mDetailListViews[position % 3];
+            View view = mDetailListViews[position % mDetailListViews.length];
             if (view.getParent() != null) {
                 container.removeView(view);
             }
             container.addView(view);
-            ((ImageView) view.findViewById(R.id.img)).setImageResource(imgRes[position]);
+            ((ImageView) view.findViewById(R.id.img)).setImageResource(imgRes[position % 4]);
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -255,9 +237,7 @@ public class MyActivity extends Activity {
 
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
-            container.removeView(mDetailListViews[position % 3]);
-            Log.d("xxxx", "destroyItem position:"+position+";object:"+object);
-            print();
+
         }
 
         void print() {

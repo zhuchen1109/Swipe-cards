@@ -230,6 +230,11 @@ public class MyActivity extends Activity {
         }
 
         @Override
+        public void finishUpdate(ViewGroup container) {
+            super.finishUpdate(container);
+        }
+
+        @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
             container.removeView(mDetailListViews[position % 3]);
         }

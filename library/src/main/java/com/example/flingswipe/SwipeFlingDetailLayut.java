@@ -16,6 +16,7 @@ public class SwipeFlingDetailLayut extends ScrollView {
 
     private View mFirstView;
     private View mSecondView;
+    private View mCircleIndicator;
     private float mDensity, mScreenHeight;
 
     public SwipeFlingDetailLayut(Context context) {
@@ -36,6 +37,10 @@ public class SwipeFlingDetailLayut extends ScrollView {
     public void setFirstAndSecondeView(View firstView, View secondView) {
         mFirstView = firstView;
         mSecondView = secondView;
+    }
+
+    public void setIndicatorView(View indicatorView) {
+        this.mCircleIndicator = indicatorView;
     }
 
     @Override
@@ -112,6 +117,9 @@ public class SwipeFlingDetailLayut extends ScrollView {
 
             @Override
             public void onAnimationEnd(Animator animation) {
+                if (mCircleIndicator != null) {
+                    mCircleIndicator.setVisibility(View.VISIBLE);
+                }
             }
         });
         viewPagerAnima.setDuration(500);
@@ -148,7 +156,9 @@ public class SwipeFlingDetailLayut extends ScrollView {
         viewPagerAnima.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
-
+                if (mCircleIndicator != null) {
+                    mCircleIndicator.setVisibility(View.GONE);
+                }
             }
 
             @Override

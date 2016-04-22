@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.example.flingswipe.SwipeFlingDetailLayut;
 import com.example.flingswipe.SwipeFlingView;
+import com.example.swipecards.view.CircleIndicator;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -34,6 +35,9 @@ public class MyActivity extends Activity {
 
     @InjectView(R.id.first_view)
     ViewPager mViewPager;
+
+    @InjectView(R.id.indicator)
+    CircleIndicator mCircleIndicator;
 
     @InjectView(R.id.second_view)
     LinearLayout mContainerLayout;
@@ -147,13 +151,7 @@ public class MyActivity extends Activity {
 
             @Override
             public void onPageSelected(int position) {
-                mDetailListViews[position % 3].setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        makeToast(MyActivity.this, "Detail img Clicked!");
-                        dismissDetailLayout();
-                    }
-                });
+
             }
 
             @Override
@@ -163,6 +161,10 @@ public class MyActivity extends Activity {
         });
         mSwipeFlingDetailLayut.setFirstAndSecondeView(mViewPager, mContainerLayout);
         initContainerLayout();
+
+        //init indicator
+        mSwipeFlingDetailLayut.setIndicatorView(mCircleIndicator);
+        mCircleIndicator.setViewPager(mViewPager);
     }
 
     private void initContainerLayout() {
@@ -223,9 +225,21 @@ public class MyActivity extends Activity {
 
         @Override
         public Object instantiateItem(ViewGroup container, int position) {
+            Log.d("xxxx", "instantiateItem position:"+position);
             View view = mDetailListViews[position % 3];
+            if (view.getParent() != null) {
+                container.removeView(view);
+            }
             container.addView(view);
             ((ImageView) view.findViewById(R.id.img)).setImageResource(imgRes[position]);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    makeToast(MyActivity.this, "Detail img Clicked!");
+                    dismissDetailLayout();
+                }
+            });
+            print();
             return view;
         }
 
@@ -237,7 +251,17 @@ public class MyActivity extends Activity {
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
             container.removeView(mDetailListViews[position % 3]);
+            Log.d("xxxx", "destroyItem position:"+position+";object:"+object);
+            print();
         }
+
+        void print() {
+            for (int i = 0; i < mDetailListViews.length; i++) {
+                View view = mDetailListViews[i];
+                Log.d("xxxx", "pos:"+i+";parent:" + view.getParent());
+            }
+        }
+
     }
 
 }

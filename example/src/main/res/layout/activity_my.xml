@@ -26,6 +26,11 @@
                 android:id="@+id/first_view"
                 android:layout_width="match_parent"
                 android:layout_height="292.5dp"/>
+            <com.example.swipecards.view.CircleIndicator
+                android:id="@+id/indicator"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_alignBottom="@id/first_view"/>
             <View
                 android:id="@+id/detail_anchor"
                 android:layout_width="match_parent"

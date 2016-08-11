@@ -48,16 +48,6 @@
                     android:textSize="20sp"
                     tools:text="Amanda AmandaAmandaAmandaAmandaAmanda 28" />
 
-                <!--<TextView
-                    android:id="@+id/item_age"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:textColor="#FFCCCCCC"
-                    android:textSize="20sp"
-                    android:layout_marginRight="16dp"
-                    tools:text=",28" />-->
-
                 <TextView
                     android:id="@+id/item_interest_count"
                     android:layout_width="wrap_content"
@@ -66,6 +56,7 @@
                     android:drawableLeft="@drawable/icon_interest"
                     android:drawablePadding="4dp"
                     android:gravity="center_vertical"
+                    android:text="8"
                     android:textColor="#FFCCCCCC"
                     android:textSize="16sp"
                     tools:text="22" />
@@ -79,6 +70,7 @@
                     android:drawableLeft="@drawable/icon_friend"
                     android:drawablePadding="4dp"
                     android:gravity="center_vertical"
+                    android:text="8"
                     android:textColor="#FFCCCCCC"
                     android:textSize="16sp"
                     tools:text="23" />
@@ -104,26 +96,12 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_above="@id/item_bottom_layout"
-           android:scaleType="centerCrop"
+            android:scaleType="centerCrop"
             app:riv_border_color="#ffffffff"
             app:riv_border_width="0dp"
             app:riv_corner_radius_top_left="4dp"
             app:riv_corner_radius_top_right="4dp"
             app:riv_tile_mode="clamp" />
-
-        <TextView
-            android:id="@+id/item_pic_count"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"
-            android:layout_marginLeft="8dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/ic_pic_size"
-            android:gravity="center"
-            android:textColor="@color/white"
-            android:textSize="12sp"
-            tools:text="7" />
 
         <com.example.swipecards.ui.SwipeIndicatorView
             android:id="@+id/item_swipe_unlike_indicator"

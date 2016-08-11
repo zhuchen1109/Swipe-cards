@@ -61,11 +61,9 @@ public class UserAdapter extends BaseAdapter {
         holder.likeIndicator.reset();
         holder.unLikeIndicator.reset();
         holder.nameView.setText(cardEntity.who);
-        //holder.ageView.setText(" " + cardEntity.getAge());
         holder.addressView.setText(cardEntity.desc);
         holder.img.reset();
         holder.img.setUser(cardEntity);
-        //holder.mLoadingView.setVisibility(View.GONE);
 
         ImageLoaderHandler.get().loadCardImage((Activity) mContext, holder.img, null, cardEntity.url, false);
         return convertView;
@@ -75,27 +73,23 @@ public class UserAdapter extends BaseAdapter {
         CardLayout cardLayout;
         CardImageView img;
         TextView nameView;
-        //TextView ageView;
         TextView addressView;
         SwipeIndicatorView likeIndicator;
         SwipeIndicatorView unLikeIndicator;
         TextView mFriendCountTv;
         TextView mInterestCountTv;
         ViewGroup mBottomLayout;
-        TextView mPicCountView;
 
         ViewHolder(View rootView) {
             cardLayout = (CardLayout) rootView;
             img = ButterKnife.findById(rootView, R.id.item_img);
             nameView = ButterKnife.findById(rootView, R.id.item_name);
-            //ageView = ButterKnife.findById(rootView, R.id.item_age);
             addressView = ButterKnife.findById(rootView, R.id.item_address);
             likeIndicator = ButterKnife.findById(rootView, R.id.item_swipe_like_indicator);
             unLikeIndicator = ButterKnife.findById(rootView, R.id.item_swipe_unlike_indicator);
             mFriendCountTv = ButterKnife.findById(rootView, R.id.item_friend_count);
             mInterestCountTv = ButterKnife.findById(rootView, R.id.item_interest_count);
             mBottomLayout = ButterKnife.findById(rootView, R.id.item_bottom_layout);
-            mPicCountView = ButterKnife.findById(rootView, R.id.item_pic_count);
         }
 
         @Override

@@ -6,7 +6,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.2.3'
+        classpath 'com.android.tools.build:gradle:2.1.2'
 
 
     }
@@ -18,5 +18,28 @@ allprojects {
 
     repositories {
         jcenter()
+    }
+}
+
+ext {
+    versionCode = 1051
+    versionName = "1.05"
+
+    minSdkVersion = 15              // 最低支持的 Android 版本
+    targetSdkVersion = 22           // 目标 Android 版本
+    compileSdkVersion = 23          // 编译使用的 Android SDK 版本
+    buildToolsVersion = "23.0.1"    // 编译工具版本
+
+    abortOnError = false            // Lint
+
+    sourceJavaVersion = JavaVersion.VERSION_1_7
+    targetJavaVersion = JavaVersion.VERSION_1_7
+
+    if (System.properties['os.name'].toLowerCase(Locale.ROOT).contains('windows')) {
+        isWindows = true
+        println "OS: " + System.properties['os.name']
+    } else {
+        isWindows = false
+        println "OS: " + System.properties['os.name']
     }
 }

@@ -114,17 +114,17 @@ public class RetrofitHelper {
                 }
 
                 BaseModel<T> model = response.body();
-                if (model.ret != HttpURLConnection.HTTP_OK) {
-                    MyLog.d(TAG, "call() fail， model.ret = " + model.ret);
+                if (model.error) {
+                    MyLog.d(TAG, "call() fail， model.error = true");
                     if (callback != null) {
-                        callback.onLoadFail(model.ret);
+                        callback.onLoadFail(-100);
                     }
                     return;
                 }
-                T data = model.data;
+                T data = model.results;
                 if (!allowNull && data == null) {
                     MyLog.d(TAG, "call() fail， data == null ");
-                    callback.onLoadFail(model.ret);
+                    callback.onLoadFail(-100);
                     return;
                 }
 

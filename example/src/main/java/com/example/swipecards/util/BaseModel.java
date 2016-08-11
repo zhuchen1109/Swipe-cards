@@ -8,6 +8,6 @@ import android.support.annotation.Keep;
  */
 @Keep
 public class BaseModel<T> {
-    public int ret;
-    public T data;
+    public boolean error;
+    public T results;
 }

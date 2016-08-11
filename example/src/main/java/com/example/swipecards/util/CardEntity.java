@@ -24,4 +24,6 @@ public class CardEntity {
     public String url;
     public String who;
 
+    public boolean superLikeMe;
+
 }

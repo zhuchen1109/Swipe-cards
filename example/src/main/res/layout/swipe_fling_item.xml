@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.swipecards.ui.CardLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal"
+    android:layout_marginLeft="@dimen/card_margin_left_right"
+    android:layout_marginRight="@dimen/card_margin_left_right"
+    android:layout_marginTop="@dimen/card_margin_top"
+    android:background="@drawable/swipe_fling_item_bg"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:paddingBottom="4dp"
+    android:paddingLeft="4dp"
+    android:paddingRight="4dp"
+    android:paddingTop="2.5dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:id="@+id/item_bottom_layout"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:paddingTop="14dp">
+
+            <LinearLayout
+                android:id="@+id/item_bottom_ll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/item_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="16dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical"
+                    android:maxLines="1"
+                    android:textColor="#FF666666"
+                    android:textSize="20sp"
+                    tools:text="Amanda AmandaAmandaAmandaAmandaAmanda 28" />
+
+                <!--<TextView
+                    android:id="@+id/item_age"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:textColor="#FFCCCCCC"
+                    android:textSize="20sp"
+                    android:layout_marginRight="16dp"
+                    tools:text=",28" />-->
+
+                <TextView
+                    android:id="@+id/item_interest_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBaseline="@id/item_name"
+                    android:drawableLeft="@drawable/icon_interest"
+                    android:drawablePadding="4dp"
+                    android:gravity="center_vertical"
+                    android:textColor="#FFCCCCCC"
+                    android:textSize="16sp"
+                    tools:text="22" />
+
+                <TextView
+                    android:id="@+id/item_friend_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBaseline="@id/item_name"
+                    android:layout_marginLeft="16dp"
+                    android:drawableLeft="@drawable/icon_friend"
+                    android:drawablePadding="4dp"
+                    android:gravity="center_vertical"
+                    android:textColor="#FFCCCCCC"
+                    android:textSize="16sp"
+                    tools:text="23" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/item_address"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/item_bottom_ll"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:textColor="#FFCCCCCC"
+                android:textSize="16sp"
+                tools:text="Stanford University" />
+
+        </RelativeLayout>
+
+        <com.example.swipecards.ui.CardImageView
+            android:id="@+id/item_img"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@id/item_bottom_layout"
+           android:scaleType="centerCrop"
+            app:riv_border_color="#ffffffff"
+            app:riv_border_width="0dp"
+            app:riv_corner_radius_top_left="4dp"
+            app:riv_corner_radius_top_right="4dp"
+            app:riv_tile_mode="clamp" />
+
+        <TextView
+            android:id="@+id/item_pic_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/ic_pic_size"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            tools:text="7" />
+
+        <com.example.swipecards.ui.SwipeIndicatorView
+            android:id="@+id/item_swipe_unlike_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/item_bottom_layout"
+            android:layout_alignParentRight="true"
+            android:layout_marginBottom="10dp"
+            android:layout_marginRight="10dp"
+            android:src="@drawable/icon_unlike_float"
+            android:visibility="invisible"
+            tools:visibility="visible" />
+
+        <com.example.swipecards.ui.SwipeIndicatorView
+            android:id="@+id/item_swipe_like_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/item_bottom_layout"
+            android:layout_alignParentLeft="true"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="10dp"
+            android:src="@drawable/icon_like_float"
+            android:visibility="invisible"
+            tools:visibility="visible" />
+
+    </RelativeLayout>
+
+</com.example.swipecards.ui.CardLayout>

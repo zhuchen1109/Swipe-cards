@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#fff"
-    android:orientation="vertical">
+    android:background="#FFEEEEEE"
+    android:clipChildren="false">
 
     <TextView
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="#FF7857FF"
         android:gravity="center"
@@ -14,5 +16,11 @@
         android:textColor="#fff"
         android:textSize="18sp" />
 
-
-</LinearLayout>
+    <com.zc.swiple.SwipeFlingView
+        android:id="@+id/frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="56dp"
+        android:clipChildren="false"
+        app:rotation_degrees="12" />
+</FrameLayout>

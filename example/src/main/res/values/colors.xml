@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="window_background_color">#FFEEEEEE</color>
+
+    <color name="card_default_bg">#FFEFEFEF</color>
+    <color name="global_item_bg_normal">@android:color/transparent</color>
+    <color name="global_item_bg_press">#0a000000</color>
+
+    <color name="crop_button_bar">#f3f3f3</color>
+    <color name="crop_button_text">#666666</color>
+    <color name="crop_selector_pressed">#1a000000</color>
+    <color name="crop_selector_focused">#77000000</color>
+    <color name="detail_divider_bg">#FFE9E9E9</color>
+    <color name="setting_divider_bg">#FFE9E9E9</color>
+    <color name="setting_result_text">#FF7857FF</color>
+    <color name="setting_card_bg">#FFF6F6F6</color>
+
+    <color name="color_primary">#FF7857FF</color>
+    <color name="color_primary_dark">#FF694CE0</color>
+    <color name="liked_list_subtext_color_normal">#8A000000</color>
+    <color name="liked_list_subtext_color_focus">#FFFF5180</color>
+</resources>

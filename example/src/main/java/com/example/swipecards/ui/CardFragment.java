@@ -11,6 +11,7 @@ import com.example.swipecards.util.BaseModel;
 import com.example.swipecards.util.CardEntity;
 import com.example.swipecards.util.RetrofitHelper;
 import com.zc.swiple.SwipeFlingView;
+import com.zc.swiple.SwipeFlingViewNew;
 
 import java.util.ArrayList;
 
@@ -25,10 +26,10 @@ import retrofit2.Response;
  *
  * @author zc
  */
-public class CardFragment extends Fragment implements SwipeFlingView.onSwipeListener {
+public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeListener {
 
     @InjectView(R.id.frame)
-    SwipeFlingView mSwipeFlingView;
+    SwipeFlingViewNew mSwipeFlingView;
 
     private UserAdapter mAdapter;
 

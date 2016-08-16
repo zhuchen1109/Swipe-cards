@@ -16,7 +16,7 @@
         android:textColor="#fff"
         android:textSize="18sp" />
 
-    <com.zc.swiple.SwipeFlingView
+    <com.zc.swiple.SwipeFlingViewNew
         android:id="@+id/frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

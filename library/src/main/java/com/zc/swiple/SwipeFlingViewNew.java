@@ -27,16 +27,17 @@ import java.util.ArrayList;
  * 支持侧滑的叠加组件
  * @zc
  */
-public class SwipeFlingView extends AdapterView {
+public class SwipeFlingViewNew extends AdapterView {
 
-    private final static boolean DEBUG = true;
-    static final String TAG = SwipeFlingView.class.getSimpleName();
+    protected final static boolean DEBUG = true;
+    static final String TAG = SwipeFlingViewNew.class.getSimpleName();
 
+    private static final int MIN_FLING_VELOCITY = 300; // dips
     private float MAX_COS = (float) Math.cos(Math.toRadians(45));
     private int MAX_VISIBLE = 4;
     private int MIN_ADAPTER_STACK = 3;
     private float ROTATION_DEGREES = 15.f;
-    private float SCALE = 0.93f;
+    private float SCALE_STEP = 0.1f;
     private float[] CHILD_SCALE_BY_INDEX;
     private float[] CHILD_VERTICAL_OFFSET_BY_INDEX;
     private float mCardVerticalOffset = -1;
@@ -58,15 +59,23 @@ public class SwipeFlingView extends AdapterView {
     private PointF mLastTouchPoint;
     private boolean hasCardTouched = false;//因为现在设计的问题 在卡片划走 下一张卡片绑定事件有空挡期 会导致事件被父容器捕获
 
-    public SwipeFlingView(Context context) {
+    private ViewDragHelper mViewDragHelper;
+
+    private int mOriginTopViewX = 0, mOriginTopViewY = 0; //视图初始位置
+    private int mCardWidth;
+    private float mCardHalfWidth;
+    private int mMinFlingVelocity, mMaxFlingVelocity, mMinTouchSlop, mTapTimeout;
+    private ArrayList<View> mReleasedViewList = new ArrayList<>();
+
+    public SwipeFlingViewNew(Context context) {
         this(context, null);
     }
 
-    public SwipeFlingView(Context context, AttributeSet attrs) {
+    public SwipeFlingViewNew(Context context, AttributeSet attrs) {
         this(context, attrs, R.attr.SwipeFlingStyle);
     }
 
-    public SwipeFlingView(Context context, AttributeSet attrs, int defStyle) {
+    public SwipeFlingViewNew(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.SwipeFlingView, defStyle, 0);
@@ -79,8 +88,10 @@ public class SwipeFlingView extends AdapterView {
     }
 
     public void init(final Context context) {
+        mViewDragHelper = ViewDragHelper.create(this, 10, new SwipeFlingDragCallBack(this));
+
         float density = context.getResources().getDisplayMetrics().density;
-        mCardVerticalOffset = 5f * density;
+        mCardVerticalOffset = 6f * density;
 
         mRecycleBin = new RecycleBin();
         CHILD_SCALE_BY_INDEX = new float[MAX_VISIBLE];
@@ -89,26 +100,31 @@ public class SwipeFlingView extends AdapterView {
         float tempScale = 1.f;
         float verticalOffset = 0;
         while (index < MAX_VISIBLE) {
-            if (index == 0) {
-                //
-            } else if (index == MAX_VISIBLE - 1) {
-                //
-            } else {
-                tempScale *= SCALE;
+            if (index != 0 && index != MAX_VISIBLE -1) {
+                tempScale -= SCALE_STEP;
                 verticalOffset += mCardVerticalOffset;
             }
             CHILD_SCALE_BY_INDEX[MAX_VISIBLE - 1 - index] = tempScale;
             CHILD_VERTICAL_OFFSET_BY_INDEX[MAX_VISIBLE - 1 - index] = verticalOffset;
             ++index;
         }
-        //CHILD_SCALE_BY_INDEX = new float[] {0.25f, 0.25f, 0.5f, 1.f};
         if (DEBUG) {
             String log = "CHILD_SCALE_BY_INDEX:";
             for (float f : CHILD_SCALE_BY_INDEX) {
                 log += f + ">>";
             }
-            log(log + ";mCardVerticalOffset:" + mCardVerticalOffset);
+            String offset = "CHILD_VERTICAL_OFFSET_BY_INDEX:";
+            for (float f : CHILD_VERTICAL_OFFSET_BY_INDEX) {
+                offset += f + ">>";
+            }
+            log(log + ";mCardVerticalOffset:" + mCardVerticalOffset + offset);
         }
+
+        ViewConfiguration config = ViewConfiguration.get(getContext());
+        mMinFlingVelocity = (int) (MIN_FLING_VELOCITY * density);
+        mMaxFlingVelocity = config.getScaledMaximumFlingVelocity();
+        mMinTouchSlop = config.getScaledTouchSlop();
+        mTapTimeout = ViewConfiguration.getTapTimeout();
     }
 
     @Override
@@ -151,11 +167,11 @@ public class SwipeFlingView extends AdapterView {
         mInLayout = true;
         final int adapterCount = mAdapter.getCount();
 
-        log("onLayout hasVaildBin:" + mRecycleBin.isVaildBin() + ";mCurPositon:" + mCurPositon + ";adapterCount:" + adapterCount);
+        log("onLayout hasVaildBin:" + mRecycleBin.hasVaildBin() + ";mCurPositon:" + mCurPositon + ";adapterCount:" + adapterCount);
         if (adapterCount == 0 || mCurPositon >= adapterCount) {
             removeAllViewsInLayout();
         } else {
-            if (mRecycleBin.isVaildBin()) {
+            if (mRecycleBin.hasVaildBin()) {
                 int startingIndex = 0;
                 if (adapterCount > MAX_VISIBLE) {
                     int curChildCount = getChildCount();
@@ -215,6 +231,15 @@ public class SwipeFlingView extends AdapterView {
         if (adapterCount > 0 && adapterCount == mCurPositon && mPositonByEmptyData != mCurPositon) {
             mPositonByEmptyData = mCurPositon;
             mFlingListener.onAdapterEmpty();
+        }
+
+        //-----
+        View topCard = getChildAt(LAST_OBJECT_IN_STACK);
+        if (topCard != null) {
+            mOriginTopViewX = topCard.getLeft();
+            mOriginTopViewY = topCard.getTop();
+            mCardWidth = topCard.getWidth();
+            mCardHalfWidth = mCardWidth * .5f;
         }
     }
 
@@ -350,7 +375,7 @@ public class SwipeFlingView extends AdapterView {
                     childLeft = getPaddingLeft() + lp.leftMargin;
                 } else {
                     childLeft = (getWidth() + getPaddingLeft() - getPaddingRight() - w) / 2 +
-                        lp.leftMargin - lp.rightMargin;
+                            lp.leftMargin - lp.rightMargin;
                 }
                 break;
             case Gravity.END:
@@ -470,7 +495,7 @@ public class SwipeFlingView extends AdapterView {
                     }
                 });
                 hasCardTouched = true;
-                mActiveCard.setOnTouchListener(flingCardListener);
+                //mActiveCard.setOnTouchListener(flingCardListener);
                 mFlingListener.onTopCardViewFinish();
             } else {
                 mActiveCard = cardView;
@@ -917,7 +942,7 @@ public class SwipeFlingView extends AdapterView {
             this.mRecycleView = null;
         }
 
-        boolean isVaildBin() {
+        boolean hasVaildBin() {
             if (mAdapter == null || mActiveViews.size() == 0) {
                 return false;
             }
@@ -944,6 +969,14 @@ public class SwipeFlingView extends AdapterView {
                 mActiveViews.set(i, null);
             }
             mRecycleView = null;
+        }
+
+        boolean isTopView(View view) {
+            int index = mActiveViews.indexOf(view);
+            if (index == mActiveViews.size() - 1) {
+                return true;
+            }
+            return false;
         }
 
         public void pritfViews(String tag) {
@@ -1022,24 +1055,22 @@ public class SwipeFlingView extends AdapterView {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        if (DEBUG) {
-            Log.d(TAG, ev.getAction() + ":" + hasCardTouched);
+        boolean should = mViewDragHelper.shouldInterceptTouchEvent(ev);
+        int action = ev.getActionMasked();
+        if (action == MotionEvent.ACTION_DOWN) {
+            // ACTION_DOWN的时候就对view重新排序
+            resetChildren();
+            // 保存初次按下时arrowFlagView的Y坐标
+            // action_down时就让mDragHelper开始工作，否则有时候导致异常
+            //mViewDragHelper.processTouchEvent(ev);
         }
-        if (!hasCardTouched) {
-            return true;
-        }
-        return super.onInterceptTouchEvent(ev);
+        return should;
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        if (DEBUG) {
-            Log.d(TAG, ev.getAction() + "--:" + hasCardTouched);
-        }
-        if (!hasCardTouched) {
-            return true;
-        }
-        return super.onTouchEvent(ev);
+        mViewDragHelper.processTouchEvent(ev);
+        return true;
     }
 
     private static class SwipeChildContainer extends FrameLayout {
@@ -1070,32 +1101,202 @@ public class SwipeFlingView extends AdapterView {
                 mOnTouchListener.computeScroll();
             }
         }
+    }
 
-        @Override
-        public boolean onInterceptTouchEvent(MotionEvent ev) {
-            boolean b = super.onInterceptTouchEvent(ev);
-            /*switch (ev.getAction() & MotionEvent.ACTION_MASK) {
-                case MotionEvent.ACTION_DOWN:
-                    mDownX = ev.getX();
-                    mDownY = ev.getY();
-                    return false;
-                case MotionEvent.ACTION_MOVE:
-                    float dx = ev.getX() - mDownX;
-                    float dy = ev.getY() - mDownY;
-                    if (Math.abs(dx) < mTouchSlop && Math.abs(dy) < mTouchSlop) {
-                        return false;
-                    }
-                    break;
-                case MotionEvent.ACTION_UP:
-                    break;
-            }*/
-            return b;
-        }
+    public void onScroll(View changedView, boolean isOffsetUp) {
+        int left = changedView.getLeft();
+        int top = changedView.getTop();
+        float scrollProgressPercent = getScrollProgressPercent(left, top);
+        updateChildrenOffset(isOffsetUp, scrollProgressPercent);
+    }
 
-        @Override
-        public boolean onTouchEvent(MotionEvent ev) {
-            return super.onTouchEvent(ev);
+    private boolean movedBeyondLeftBorder(int left) {
+        Log.d("xxxx", "movedBeyondLeftBorder left:" + left + ";leftBorder:" + leftBorder()+";"+(left + mCardHalfWidth < leftBorder()));
+        return left + mCardHalfWidth < leftBorder();
+    }
+
+    private boolean movedBeyondRightBorder(int left) {
+        Log.d("xxxx", "movedBeyondRightBorder left:" + left + ";rightBorder:" + rightBorder()+";"+(left + mCardHalfWidth > rightBorder()));
+        return left + mCardHalfWidth > rightBorder();
+    }
+
+    protected float leftBorder() {
+        return getWidth() / 4.f;
+    }
+
+    protected float rightBorder() {
+        return 3.f * getWidth() / 4.f;
+    }
+
+    protected float computeScrollPercent(int left, int top) {
+        float zeroToOneValue = (left + mCardHalfWidth - leftBorder()) / (rightBorder() - leftBorder());
+        Log.d("xxxx", "zeroToOneValue:"+zeroToOneValue);
+        return (zeroToOneValue * 2.f - 1f);
+    }
+
+    private float getScrollProgressPercent(int left, int top) {
+        if (movedBeyondLeftBorder(left)) {
+            return -1f;
+        } else if (movedBeyondRightBorder(left)) {
+            return 1f;
+        } else {
+            return computeScrollPercent(left, top);
         }
     }
 
+    protected void onViewPositionChanged(View changedView, int left, int top,
+                                      int dx, int dy) {
+        onScroll(changedView, true);
+    }
+
+    protected boolean tryCaptureView(View child, int pointerId) {
+        Log.d(TAG, "tryCaptureView visibility:" + (child.getVisibility() == View.VISIBLE)
+                + ";ScaleX:" + (child.getScaleX())
+                + ";hasVaildBin:" + mRecycleBin.hasVaildBin()
+                + ";isTopView:" + mRecycleBin.isTopView(child));
+        if (child.getVisibility() != View.VISIBLE
+                || child.getScaleX() <= 1.0f - SCALE_STEP
+                || !mRecycleBin.hasVaildBin()
+                || !mRecycleBin.isTopView(child)) {
+            return false;
+        }
+
+        // 如果数据List为空，或者子View不可见，则不予处理
+        /*if (child == bottomLayout || dataList == null || dataList.size() == 0
+                || child.getVisibility() != View.VISIBLE || child.getScaleX() <= 1.0f - SCALE_STEP) {
+            // 一般来讲，如果拖动的是第三层、或者第四层的View，则直接禁止
+            // 此处用getScale的用法来巧妙回避
+            return false;
+        }
+
+        if (btnLock) {
+            return false;
+        }
+
+        // 只捕获顶部view(rotation=0)
+        int childIndex = viewList.indexOf(child);
+        if (childIndex > 0) {
+            return false;
+        }
+
+        mCurCardView = child;
+        ((CardItemView) child).onStartDragging();*/
+        return true;
+    }
+
+    protected void onViewReleased(View releasedChild, float xvel, float yvel) {
+        //animToSide((CardItemView) releasedChild, xvel);
+        Log.d("xxxx", "xvel:" + xvel+";mMinFlingVelocity:"+mMinFlingVelocity);
+        int left = releasedChild.getLeft();
+        if (xvel < -mMinFlingVelocity || movedBeyondLeftBorder(left)) {
+            //fling left
+            onSelected(releasedChild, true);
+        } else if (xvel > mMinFlingVelocity || movedBeyondRightBorder(left)) {
+            //fling right
+            onSelected(releasedChild, false);
+        } else {
+            //reset postion
+            resetReleasedChildPos(releasedChild, mOriginTopViewX, mOriginTopViewY);
+        }
+    }
+
+    private void onSelected(View releasedChild, boolean isLeft) {
+        final int width = getWidth();
+        int halfHeight = getHeight() / 2;
+        int dx = releasedChild.getLeft() - mOriginTopViewX;
+        int dy = releasedChild.getTop() - mOriginTopViewY;
+        if (dx == 0) {
+            dx = 1;
+        }
+        int exitX = isLeft ? -width : width;
+        int exitY = dy * width / Math.abs(dx) + mOriginTopViewY;
+
+        if (exitY > halfHeight) {
+            exitY = halfHeight;
+        } else if (exitY < -halfHeight) {
+            exitY = -halfHeight;
+        }
+
+        mReleasedViewList.add(releasedChild);
+        if (mViewDragHelper.smoothSlideViewTo(releasedChild, exitX, exitY)) {
+            computeScrollByFling();
+        }
+    }
+
+    protected void computeScrollByFling() {
+        if (mViewDragHelper.continueSettling(true)) {
+            Log.d("xxxx", "computeScrollByFling running");
+            ViewCompat.postOnAnimation(this, new Runnable() {
+                @Override
+                public void run() {
+                    computeScrollByFling();
+                }
+            });
+        } else {
+            Log.d("xxxx", "computeScrollByFling over");
+            // 动画结束
+            synchronized (this) {
+                if (mViewDragHelper.getViewDragState() == ViewDragHelper.STATE_IDLE) {
+                    onCardExit();
+                }
+            }
+        }
+    }
+
+    private void onCardExit() {
+        resetChildren();
+    }
+
+    private void resetChildren() {
+        if (mReleasedViewList.size() == 0) {
+            return;
+        }
+        View activeCard = mReleasedViewList.remove(0);
+        if (activeCard == null) {
+            return;
+        } else {
+            mCurPositon += 1;
+            mRecycleBin.removeActiveView(activeCard);
+            removeViewInLayout(activeCard);
+            mActiveCard = null;
+        }
+        requestLayout();
+    }
+
+    private void resetReleasedChildPos(final View releasedChild, int originX, int originY) {
+        final int curX = releasedChild.getLeft();
+        final int curY = releasedChild.getTop();
+        final int dx = originX - curX;
+        final int dy = originY - curY;
+        ValueAnimator animator = ValueAnimator.ofFloat(0.f, 1.f);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float frac = animation.getAnimatedFraction();
+                releasedChild.offsetLeftAndRight((int) (curX + dx * frac - releasedChild.getLeft()));
+                releasedChild.offsetTopAndBottom((int) (curY + dy * frac - releasedChild.getTop()));
+                onScroll(releasedChild, true);
+            }
+        });
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                super.onAnimationStart(animation);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                super.onAnimationCancel(animation);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+            }
+        });
+        animator.setDuration(300);
+        animator.start();
+    }
+
 }
+

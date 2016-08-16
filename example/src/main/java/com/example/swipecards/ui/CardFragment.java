@@ -2,6 +2,7 @@ package com.example.swipecards.ui;
 
 import android.app.Fragment;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,6 +35,7 @@ public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeL
     private UserAdapter mAdapter;
 
     private int mPageIndex = 0;
+    private boolean mIsRequestGirlList;
     private ArrayList<CardEntity> mGrilList = new ArrayList<>();
 
     @Override
@@ -58,21 +60,27 @@ public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeL
     }
 
     private void requestGirlList() {
+        if (mIsRequestGirlList) {
+            return;
+        }
+        mIsRequestGirlList = true;
         Call<BaseModel<ArrayList<CardEntity>>> call = RetrofitHelper.api().getGirlList(mPageIndex);
         RetrofitHelper.call(call, new RetrofitHelper.ApiCallback<ArrayList<CardEntity>>() {
             @Override
             public void onLoadSucceed(ArrayList<CardEntity> result) {
                 updateListView(result);
+                ++mPageIndex;
+                mIsRequestGirlList = false;
             }
 
             @Override
             public void onLoadFail(int statusCode) {
-
+                mIsRequestGirlList = false;
             }
 
             @Override
             public void onForbidden() {
-
+                mIsRequestGirlList = false;
             }
         });
     }
@@ -119,7 +127,7 @@ public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeL
 
     @Override
     public void onAdapterAboutToEmpty(int itemsInAdapter) {
-
+        requestGirlList();
     }
 
     @Override

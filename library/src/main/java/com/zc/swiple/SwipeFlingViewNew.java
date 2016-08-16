@@ -523,22 +523,22 @@ public class SwipeFlingViewNew extends AdapterView {
         selectRight(true);
     }
 
-    public void selectRight(boolean isCallbackForOnScroll) {
-        if (flingCardListener != null) {
-            flingCardListener.selectRight(isCallbackForOnScroll);
+    public void selectLeft(boolean isCallbackForOnScroll) {
+        if (mActiveCard != null) {
+            updateActiveViewData();
+            onSelected(mActiveCard, true, false);
         }
     }
 
-    public void selectLeft(boolean isCallbackForOnScroll) {
-        if (flingCardListener != null) {
-            flingCardListener.selectLeft(isCallbackForOnScroll);
+    public void selectRight(boolean isCallbackForOnScroll) {
+        if (mActiveCard != null) {
+            updateActiveViewData();
+            onSelected(mActiveCard, false, false);
         }
     }
 
     public void selectSuperLike(boolean isCallbackForOnScroll) {
-        if (flingCardListener != null) {
-            flingCardListener.selectSuperLike(isCallbackForOnScroll);
-        }
+
     }
 
     /**
@@ -1063,10 +1063,14 @@ public class SwipeFlingViewNew extends AdapterView {
         }
     }
 
-    public void onScroll(View changedView, boolean isOffsetUp) {
+    private void onScroll(View changedView, boolean isOffsetUp) {
         int left = changedView.getLeft();
         int top = changedView.getTop();
         float scrollProgressPercent = getScrollProgressPercent(left, top);
+        onScroll(changedView, isOffsetUp, scrollProgressPercent);
+    }
+
+    public void onScroll(View changedView, boolean isOffsetUp, float scrollProgressPercent) {
         updateChildrenOffset(isOffsetUp, scrollProgressPercent);
     }
 
@@ -1145,10 +1149,7 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     protected void onViewCaptured(View capturedChild, int activePointerId) {
-        mOriginTopViewX = capturedChild.getLeft();
-        mOriginTopViewY = capturedChild.getTop();
-        mCardWidth = capturedChild.getWidth();
-        mCardHalfWidth = mCardWidth * .5f;
+        updateActiveViewData(capturedChild);
         Log.d("xxxx", "mOriginTopViewX:"+mOriginTopViewX+";mOriginTopViewY:"+mOriginTopViewY);
     }
 
@@ -1158,17 +1159,20 @@ public class SwipeFlingViewNew extends AdapterView {
         int left = releasedChild.getLeft();
         if (xvel < -mMinFlingVelocity || movedBeyondLeftBorder(left)) {
             //fling left
-            onSelected(releasedChild, true);
+            onSelected(releasedChild, true, true);
         } else if (xvel > mMinFlingVelocity || movedBeyondRightBorder(left)) {
             //fling right
-            onSelected(releasedChild, false);
+            onSelected(releasedChild, false, true);
         } else {
             //reset postion
             resetReleasedChildPos(releasedChild, mOriginTopViewX, mOriginTopViewY);
         }
     }
 
-    private void onSelected(View releasedChild, boolean isLeft) {
+    private void onSelected(final View releasedChild, boolean isLeft, final boolean triggerByTouchMove) {
+        if (mActiveCard == null) {
+            return;
+        }
         final int width = getWidth();
         int halfHeight = getHeight() / 2;
         int dx = releasedChild.getLeft() - mOriginTopViewX;
@@ -1186,8 +1190,45 @@ public class SwipeFlingViewNew extends AdapterView {
         }
 
         mReleasedViewList.add(releasedChild);
-        if (mViewDragHelper.smoothSlideViewTo(releasedChild, exitX, exitY)) {
-            computeScrollByFling();
+
+        if (triggerByTouchMove) {
+            if (mViewDragHelper.smoothSlideViewTo(releasedChild, exitX, exitY)) {
+                computeScrollByFling();
+            }
+        } else {
+            final int finalX = exitX;
+            final int finalY = exitY;
+            ValueAnimator animator = ValueAnimator.ofFloat(0.f, 1.f);
+            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    float frac = animation.getAnimatedFraction();
+                    releasedChild.setTranslationX(finalX * frac);
+                    onScroll(releasedChild, true, frac);
+                }
+            });
+            animator.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    super.onAnimationStart(animation);
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                    onEnd();
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    onEnd();
+                }
+
+                private void onEnd() {
+                    onCardExit();
+                }
+            });
+            animator.setDuration(300);
+            animator.start();
         }
     }
 
@@ -1240,6 +1281,24 @@ public class SwipeFlingViewNew extends AdapterView {
             mActiveCard = null;
         }
         requestLayout();
+    }
+
+    private void updateActiveViewData() {
+        updateActiveViewData(null);
+    }
+
+    private void updateActiveViewData(View capturedView) {
+        View activeView = capturedView;
+        if (activeView == null) {
+            activeView = mActiveCard;
+        }
+        if (activeView == null) {
+            return;
+        }
+        mOriginTopViewX = activeView.getLeft();
+        mOriginTopViewY = activeView.getTop();
+        mCardWidth = activeView.getWidth();
+        mCardHalfWidth = mCardWidth * .5f;
     }
 
     private void resetReleasedChildPos(final View releasedChild, int originX, int originY) {

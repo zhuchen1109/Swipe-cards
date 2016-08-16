@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -16,11 +16,16 @@
         android:textColor="#fff"
         android:textSize="18sp" />
 
+    <include
+        android:id="@+id/swipe_fling_bottom"
+        layout="@layout/layout_swipe_fling_bottom" />
+
     <com.zc.swiple.SwipeFlingViewNew
         android:id="@+id/frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="56dp"
+        android:layout_above="@id/swipe_fling_bottom"
+        android:layout_marginBottom="18dp"
         android:clipChildren="false"
         app:rotation_degrees="12" />
-</FrameLayout>
+</RelativeLayout>

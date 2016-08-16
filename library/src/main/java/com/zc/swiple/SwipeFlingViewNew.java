@@ -397,6 +397,11 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     private void setTopView() {
+        if (getChildCount() > 0) {
+            View cardView = getChildAt(LAST_OBJECT_IN_STACK);
+            mActiveCard = cardView;
+        }
+
         if (true)return;
         if (getChildCount() > 0) {
             View cardView = getChildAt(LAST_OBJECT_IN_STACK);
@@ -540,7 +545,7 @@ public class SwipeFlingViewNew extends AdapterView {
      * 返回上一个已经划过去的卡片
      * @param fromLeft true:从左边返回 反之右边返回
      */
-    public void onComeBackCard(boolean fromLeft) {
+    public void selectComeBackCard(boolean fromLeft) {
         if (isFirstCard()) {
             return;
         }
@@ -705,45 +710,6 @@ public class SwipeFlingViewNew extends AdapterView {
         });
         anim.setDuration(duration);
         anim.start();
-
-        /*frame.animate()
-                .setDuration(duration)
-                .setInterpolator(null)
-                .x(originX)
-                .y(originY)
-                .setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-                        frame.setVisibility(View.VISIBLE);
-                        MyLog.d("xxxx", ""+frame.getVisibility()+
-                        ";"+frame.getLeft()+";"+frame.getTop()+
-                        ";"+frame.getWidth()+";"+frame.getHeight());
-                        *//*if (!triggerByTouchMove) {
-                            startCardViewAnimator(0.f, isLeft ? -1.f : 1.f, duration, isCallbackForOnScroll);
-                        }*//*
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        onEnd(animation);
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-                        onEnd(animation);
-                    }
-
-                    private void onEnd(Animator animator) {
-                        frame.layout(childLeft, childTop, childLeft + frame.getWidth(), childTop + frame.getHeight());
-                        resetChildView(frame);
-                        frame.requestLayout();
-                        MyLog.d("xxxx", "--"+frame.getVisibility()+
-                                ";"+frame.getLeft()+";"+frame.getTop()+
-                                ";"+frame.getWidth()+";"+frame.getHeight());
-                    }
-
-                })
-                .rotation(0);*/
     }
 
     private float getEnterRotation(View frame, boolean fromLeft) {

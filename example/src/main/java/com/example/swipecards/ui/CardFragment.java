@@ -11,6 +11,7 @@ import com.example.swipecards.R;
 import com.example.swipecards.util.BaseModel;
 import com.example.swipecards.util.CardEntity;
 import com.example.swipecards.util.RetrofitHelper;
+import com.example.swipecards.view.SwipeFlingBottomLayout;
 import com.zc.swiple.SwipeFlingView;
 import com.zc.swiple.SwipeFlingViewNew;
 
@@ -27,10 +28,14 @@ import retrofit2.Response;
  *
  * @author zc
  */
-public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeListener {
+public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeListener,
+        SwipeFlingBottomLayout.OnBottomItemClickListener {
 
     @InjectView(R.id.frame)
     SwipeFlingViewNew mSwipeFlingView;
+
+    @InjectView(R.id.swipe_fling_bottom)
+    SwipeFlingBottomLayout mBottomLayout;
 
     private UserAdapter mAdapter;
 
@@ -52,6 +57,7 @@ public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeL
         mAdapter = new UserAdapter(getActivity(), mGrilList);
         mSwipeFlingView.setAdapter(mAdapter);
         mSwipeFlingView.setFlingListener(this);
+        mBottomLayout.setOnBottomItemClickListener(this);
     }
 
     private void updateListView(ArrayList<CardEntity> list) {
@@ -148,5 +154,26 @@ public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeL
     @Override
     public void onEnd() {
 
+    }
+
+    @Override
+    public void onComeBackClick() {
+        //参数决定动画开始位置是从左边还是右边出现
+        mSwipeFlingView.selectComeBackCard(true);
+    }
+
+    @Override
+    public void onSuperLikeClick() {
+        mSwipeFlingView.selectSuperLike(false);
+    }
+
+    @Override
+    public void onLikeClick() {
+        mSwipeFlingView.selectRight();
+    }
+
+    @Override
+    public void onUnLikeClick() {
+        mSwipeFlingView.selectLeft();
     }
 }

@@ -29,7 +29,10 @@ import retrofit2.Response;
  * @author zc
  */
 public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeListener,
-        SwipeFlingBottomLayout.OnBottomItemClickListener {
+        SwipeFlingBottomLayout.OnBottomItemClickListener, SwipeFlingViewNew.OnItemClickListener {
+
+    private final static String TAG = CardFragment.class.getSimpleName();
+    private final static boolean DEBUG = true;
 
     @InjectView(R.id.frame)
     SwipeFlingViewNew mSwipeFlingView;
@@ -57,6 +60,7 @@ public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeL
         mAdapter = new UserAdapter(getActivity(), mGrilList);
         mSwipeFlingView.setAdapter(mAdapter);
         mSwipeFlingView.setFlingListener(this);
+        mSwipeFlingView.setOnItemClickListener(this);
         mBottomLayout.setOnBottomItemClickListener(this);
     }
 
@@ -175,5 +179,12 @@ public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeL
     @Override
     public void onUnLikeClick() {
         mSwipeFlingView.selectLeft();
+    }
+
+    @Override
+    public void onItemClicked(int itemPosition, Object dataObject) {
+        if (DEBUG) {
+            Log.d(TAG, "onItemClicked itemPosition:" + itemPosition);
+        }
     }
 }

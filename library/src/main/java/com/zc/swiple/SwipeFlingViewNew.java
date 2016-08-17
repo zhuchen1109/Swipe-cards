@@ -7,9 +7,11 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.database.DataSetObserver;
 import android.graphics.PointF;
+import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -77,6 +79,7 @@ public class SwipeFlingViewNew extends AdapterView {
     private int mExitAnimDurationByClick = 300;
     private int mEnterAnimDurationByClick = 300;
     private ArrayList<View> mReleasedViewList = new ArrayList<>();
+    private GestureDetectorCompat mMoveDetector;
 
     public SwipeFlingViewNew(Context context) {
         this(context, null);
@@ -101,7 +104,7 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     public void init(final Context context) {
-        mViewDragHelper = ViewDragHelper.create(this, 10, new SwipeFlingDragCallBack(this));
+        mViewDragHelper = ViewDragHelper.create(this, 1, new SwipeFlingDragCallBack(this));
 
         float density = context.getResources().getDisplayMetrics().density;
         mCardVerticalOffset = 6f * density;
@@ -138,6 +141,10 @@ public class SwipeFlingViewNew extends AdapterView {
         mMaxFlingVelocity = config.getScaledMaximumFlingVelocity();
         mMinTouchSlop = config.getScaledTouchSlop();
         mTapTimeout = ViewConfiguration.getTapTimeout();
+
+        mMoveDetector = new GestureDetectorCompat(context,
+                new MoveDetector());
+        mMoveDetector.setIsLongpressEnabled(false);
     }
 
     @Override
@@ -341,6 +348,8 @@ public class SwipeFlingViewNew extends AdapterView {
             child = new SwipeChildContainer(getContext(), null);
             lp = new SwipeLayoutParame(viewLp);
             child.addView(view, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+            child.setOnClickListener(mItemClickCallback);
+            Log.d("xxxx", "mItemClickCallback");
         }
         child.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         addViewInLayout(child, isAddFirstCard ? -1 : 0, lp, true);
@@ -598,6 +607,8 @@ public class SwipeFlingViewNew extends AdapterView {
             child = new SwipeChildContainer(getContext(), null);
             lp = new SwipeLayoutParame(viewLp);
             child.addView(view, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+            child.setOnClickListener(mItemClickCallback);
+            Log.d("xxxx", "mItemClickCallback addViewOfComebackCard");
         }
         child.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         addViewInLayout(child, isAddFirstCard ? -1 : 0, lp, true);
@@ -1029,6 +1040,7 @@ public class SwipeFlingViewNew extends AdapterView {
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         boolean should = mViewDragHelper.shouldInterceptTouchEvent(ev);
+        boolean moveFlag = mMoveDetector.onTouchEvent(ev);
         int action = ev.getActionMasked();
         if (action == MotionEvent.ACTION_DOWN) {
             if (ev.getY() < getHeight() / 2) {
@@ -1040,9 +1052,9 @@ public class SwipeFlingViewNew extends AdapterView {
             resetChildren();
             // 保存初次按下时arrowFlagView的Y坐标
             // action_down时就让mDragHelper开始工作，否则有时候导致异常
-            //mViewDragHelper.processTouchEvent(ev);
+            mViewDragHelper.processTouchEvent(ev);
         }
-        return should;
+        return should && moveFlag;
     }
 
     @Override
@@ -1053,31 +1065,22 @@ public class SwipeFlingViewNew extends AdapterView {
 
     private static class SwipeChildContainer extends FrameLayout {
 
-        private float mDownX, mDownY;
-        private float mTouchSlop;
-        private SwipeFlingCardListener mOnTouchListener;
-
         public SwipeChildContainer(Context context, AttributeSet attrs) {
             super(context, attrs);
-            ViewConfiguration conf = ViewConfiguration.get(context);
-            mTouchSlop = conf.getScaledTouchSlop();
             setClipChildren(false);
         }
 
         @Override
         public void setOnTouchListener(OnTouchListener l) {
             super.setOnTouchListener(l);
-            if (l == null && mOnTouchListener != null) {
-                mOnTouchListener.recycle();
-            }
-            this.mOnTouchListener = (SwipeFlingCardListener) l;
         }
 
         @Override
-        public void computeScroll() {
-            if (mOnTouchListener != null) {
-                mOnTouchListener.computeScroll();
+        public boolean dispatchTouchEvent(MotionEvent ev) {
+            if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+                getParent().getParent().requestDisallowInterceptTouchEvent(true);
             }
+            return super.dispatchTouchEvent(ev);
         }
     }
 
@@ -1380,6 +1383,38 @@ public class SwipeFlingViewNew extends AdapterView {
         }
         return rotation;
     }
+
+    class MoveDetector extends GestureDetector.SimpleOnGestureListener {
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float dx,
+                                float dy) {
+            // 拖动了，touch不往下传递
+            Log.d("xxxxx", "onScroll dx:"+dx+";dy:"+dy+";mTouchSlop:"+mMinTouchSlop);
+            return Math.abs(dy) + Math.abs(dx) > mMinTouchSlop;
+        }
+
+        @Override
+        public boolean onSingleTapConfirmed(MotionEvent e) {
+            Log.d("xxxxx", "onSingleTapConfirmed");
+            return super.onSingleTapConfirmed(e);
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            Log.d("xxxxx", "onSingleTapUp");
+            return super.onSingleTapUp(e);
+        }
+    }
+
+    private OnClickListener mItemClickCallback = new OnClickListener() {
+        @Override
+        public void onClick(android.view.View v) {
+            if (mOnItemClickListener != null) {
+                mOnItemClickListener.onItemClicked(mCurPositon, v);
+            }
+        }
+    };
 
 }
 

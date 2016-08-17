@@ -2,6 +2,7 @@ package com.example.swipecards.ui;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -64,7 +65,6 @@ public class UserAdapter extends BaseAdapter {
         holder.addressView.setText(cardEntity.desc);
         holder.img.reset();
         holder.img.setUser(cardEntity);
-
         ImageLoaderHandler.get().loadCardImage((Activity) mContext, holder.img, null, cardEntity.url, false);
         return convertView;
     }

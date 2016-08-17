@@ -423,106 +423,6 @@ public class SwipeFlingViewNew extends AdapterView {
             View cardView = getChildAt(LAST_OBJECT_IN_STACK);
             mActiveCard = cardView;
         }
-
-        if (true)return;
-        if (getChildCount() > 0) {
-            View cardView = getChildAt(LAST_OBJECT_IN_STACK);
-            if (cardView != null && cardView != mActiveCard) {
-                mActiveCard = cardView;
-                //TODO 快速向左短距离划，再向右滑时，这个card view的tranX/tranY值前面矫正了，但在这又被恢复了，原因未知
-                resetChildView(mActiveCard);
-                flingCardListener = new SwipeFlingCardListener(mActiveCard, mAdapter.getItem(0),
-                        ROTATION_DEGREES, new SwipeFlingCardListener.FlingListener() {
-
-                    @Override
-                    public void onStart() {
-                        mFlingListener.onStart();
-                    }
-
-                    @Override
-                    public void onStartDragCard() {
-                        mFlingListener.onStartDragCard();
-                    }
-
-                    @Override
-                    public void onPreCardExited() {
-                        mFlingListener.onPreCardExit();
-                        hasCardTouched = false;
-                    }
-
-                    @Override
-                    public void onCardExited() {
-                        View activeCard = mActiveCard;
-                        if (activeCard == null) {
-                            return;
-                        } else {
-                            mCurPositon += 1;
-                            activeCard.setOnTouchListener(null);
-                            mRecycleBin.removeActiveView(activeCard);
-                            removeViewInLayout(activeCard);
-                            mActiveCard = null;
-                        }
-                        requestLayout();
-                    }
-
-                    @Override
-                    public boolean canLeftExit() {
-                        return mFlingListener.canLeftCardExit();
-                    }
-
-                    @Override
-                    public void leftExit(View view, Object dataObject, boolean triggerByTouchMove) {
-                        mFlingListener.onLeftCardExit(converChildView(view), dataObject, triggerByTouchMove);
-                    }
-
-                    @Override
-                    public boolean canRightExit() {
-                        return mFlingListener.canRightCardExit();
-                    }
-
-                    @Override
-                    public void onSuperLike(View view, Object dataObject, boolean triggerByTouchMove) {
-                        mFlingListener.onSuperLike(view, dataObject, triggerByTouchMove);
-                    }
-
-                    @Override
-                    public void rightExit(View view, Object dataObject, boolean triggerByTouchMove) {
-                        mFlingListener.onRightCardExit(converChildView(view), dataObject, triggerByTouchMove);
-                    }
-
-                    @Override
-                    public void onClick(Object dataObject) {
-                        if (mOnItemClickListener != null)
-                            mOnItemClickListener.onItemClicked(0, dataObject);
-
-                    }
-
-                    @Override
-                    public void onScroll(float scrollProgressPercent, boolean isCallbackForOnScroll) {
-                        if (isCallbackForOnScroll) {
-                            mFlingListener.onScroll(getSelectedView(), scrollProgressPercent);
-                        }
-                        updateChildrenOffset(true, scrollProgressPercent);
-                    }
-
-                    @Override
-                    public void onEndDragCard() {
-                        mFlingListener.onEndDragCard();
-                    }
-
-                    @Override
-                    public void onEnd() {
-                        mFlingListener.onEnd();
-                    }
-                });
-                hasCardTouched = true;
-                //mActiveCard.setOnTouchListener(flingCardListener);
-                mFlingListener.onTopCardViewFinish();
-            } else {
-                mActiveCard = cardView;
-                log("mActiveCard=null LAST_OBJECT_IN_STACK=" + LAST_OBJECT_IN_STACK);
-            }
-        }
     }
 
     private View converChildView(View childView) {
@@ -998,7 +898,7 @@ public class SwipeFlingViewNew extends AdapterView {
 
     public interface onSwipeListener {
 
-        void onStart();
+        void onStart(SwipeFlingViewNew swipeFlingView);
 
         void onStartDragCard();
 

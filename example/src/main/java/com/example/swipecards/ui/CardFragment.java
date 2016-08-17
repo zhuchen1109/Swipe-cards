@@ -96,68 +96,104 @@ public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeL
     }
 
     @Override
-    public void onStartDragCard() {
+    public void onStart(SwipeFlingViewNew swipeFlingView) {
+        if (DEBUG) {
+            Log.d(TAG, "SwipeFlingView onStart");
+        }
+    }
 
+    @Override
+    public void onStartDragCard() {
+        if (DEBUG) {
+            Log.d(TAG, "SwipeFlingView onStartDragCard");
+        }
     }
 
     @Override
     public void onPreCardExit() {
-
+        if (DEBUG) {
+            Log.d(TAG, "SwipeFlingView onPreCardExit");
+        }
     }
 
     @Override
     public void onTopCardViewFinish() {
-
+        if (DEBUG) {
+            Log.d(TAG, "SwipeFlingView onTopCardViewFinish");
+        }
     }
 
     @Override
     public boolean canLeftCardExit() {
+        if (DEBUG) {
+            Log.d(TAG, "SwipeFlingView canLeftCardExit");
+        }
         return true;
     }
 
     @Override
     public boolean canRightCardExit() {
+        if (DEBUG) {
+            Log.d(TAG, "SwipeFlingView canRightCardExit");
+        }
         return true;
     }
 
     @Override
     public void onLeftCardExit(View view, Object dataObject, boolean triggerByTouchMove) {
-
+        if (DEBUG) {
+            Log.d(TAG, "SwipeFlingView onLeftCardExit");
+        }
     }
 
     @Override
     public void onRightCardExit(View view, Object dataObject, boolean triggerByTouchMove) {
-
+        if (DEBUG) {
+            Log.d(TAG, "SwipeFlingView onRightCardExit");
+        }
     }
 
     @Override
     public void onSuperLike(View view, Object dataObject, boolean triggerByTouchMove) {
-
+        if (DEBUG) {
+            Log.d(TAG, "SwipeFlingView onSuperLike");
+        }
     }
 
     @Override
     public void onAdapterAboutToEmpty(int itemsInAdapter) {
+        if (DEBUG) {
+            Log.d(TAG, "SwipeFlingView onAdapterAboutToEmpty");
+        }
         requestGirlList();
     }
 
     @Override
     public void onAdapterEmpty() {
-
+        if (DEBUG) {
+            Log.d(TAG, "SwipeFlingView onAdapterEmpty");
+        }
     }
 
     @Override
     public void onScroll(View selectedView, float scrollProgressPercent) {
-
+        if (DEBUG) {
+            Log.d(TAG, "SwipeFlingView onScroll");
+        }
     }
 
     @Override
     public void onEndDragCard() {
-
+        if (DEBUG) {
+            Log.d(TAG, "SwipeFlingView onEndDragCard");
+        }
     }
 
     @Override
     public void onEnd() {
-
+        if (DEBUG) {
+            Log.d(TAG, "SwipeFlingView onEnd");
+        }
     }
 
     @Override

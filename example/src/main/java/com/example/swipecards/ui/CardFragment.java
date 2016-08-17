@@ -96,13 +96,6 @@ public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeL
     }
 
     @Override
-    public void onStart(SwipeFlingViewNew swipeFlingView) {
-        if (DEBUG) {
-            Log.d(TAG, "SwipeFlingView onStart");
-        }
-    }
-
-    @Override
     public void onStartDragCard() {
         if (DEBUG) {
             Log.d(TAG, "SwipeFlingView onStartDragCard");
@@ -190,13 +183,6 @@ public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeL
     }
 
     @Override
-    public void onEnd() {
-        if (DEBUG) {
-            Log.d(TAG, "SwipeFlingView onEnd");
-        }
-    }
-
-    @Override
     public void onComeBackClick() {
         //参数决定动画开始位置是从左边还是右边出现
         mSwipeFlingView.selectComeBackCard(true);
@@ -209,12 +195,12 @@ public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeL
 
     @Override
     public void onLikeClick() {
-        mSwipeFlingView.selectRight();
+        mSwipeFlingView.selectRight(false);
     }
 
     @Override
     public void onUnLikeClick() {
-        mSwipeFlingView.selectLeft();
+        mSwipeFlingView.selectLeft(false);
     }
 
     @Override

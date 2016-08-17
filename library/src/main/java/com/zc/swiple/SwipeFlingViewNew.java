@@ -32,8 +32,11 @@ public class SwipeFlingViewNew extends AdapterView {
     protected final static boolean DEBUG = true;
     static final String TAG = SwipeFlingViewNew.class.getSimpleName();
 
+    private final static int TOUCH_ABOVE = 0;
+    private final static int TOUCH_BELOW = 1;
+
     private static final int MIN_FLING_VELOCITY = 300; // dips
-    private float MAX_COS = (float) Math.cos(Math.toRadians(45));
+    private float MAX_COS;
     private int MAX_VISIBLE = 4;
     private int MIN_ADAPTER_STACK = 3;
     private float ROTATION_DEGREES = 15.f;
@@ -63,8 +66,16 @@ public class SwipeFlingViewNew extends AdapterView {
 
     private int mOriginTopViewX = 0, mOriginTopViewY = 0; //视图初始位置
     private int mCardWidth;
+    /**
+     * 滑动卡片 起始位置在卡片上半部分还是下半部分
+     * @see #TOUCH_ABOVE
+     * @see #TOUCH_BELOW
+     */
+    private int mTouchPosition;
     private float mCardHalfWidth;
     private int mMinFlingVelocity, mMaxFlingVelocity, mMinTouchSlop, mTapTimeout;
+    private int mExitAnimDurationByClick = 300;
+    private int mEnterAnimDurationByClick = 300;
     private ArrayList<View> mReleasedViewList = new ArrayList<>();
 
     public SwipeFlingViewNew(Context context) {
@@ -82,6 +93,8 @@ public class SwipeFlingViewNew extends AdapterView {
         MAX_VISIBLE = a.getInt(R.styleable.SwipeFlingView_max_visible, MAX_VISIBLE);
         MIN_ADAPTER_STACK = a.getInt(R.styleable.SwipeFlingView_min_adapter_stack, MIN_ADAPTER_STACK);
         ROTATION_DEGREES = a.getFloat(R.styleable.SwipeFlingView_rotation_degrees, ROTATION_DEGREES);
+        MAX_COS = (float) Math.cos(Math.toRadians(17 * 2));//目前计算还是有些问题 暂时这样
+
         a.recycle();
 
         init(context);
@@ -562,7 +575,7 @@ public class SwipeFlingViewNew extends AdapterView {
             newChild = addViewOfComebackCard(0, newChild, true, fromLeft);
             mRecycleBin.removeAndAddLastActiveView(lastView, newChild);
             //setTopView();
-            startComeBackCardAnim(newChild, fromLeft, 300);
+            startComeBackCardAnim(newChild, fromLeft, mEnterAnimDurationByClick);
             //requestLayout();
         }
     }
@@ -717,7 +730,7 @@ public class SwipeFlingViewNew extends AdapterView {
         if (fromLeft) {
             rotation = -rotation;
         }*/
-        float rotation = fromLeft ? -30.f : 30.f;
+        float rotation = fromLeft ? -ROTATION_DEGREES * 2.f : ROTATION_DEGREES * 2.f;
         return rotation;
     }
 
@@ -1018,6 +1031,11 @@ public class SwipeFlingViewNew extends AdapterView {
         boolean should = mViewDragHelper.shouldInterceptTouchEvent(ev);
         int action = ev.getActionMasked();
         if (action == MotionEvent.ACTION_DOWN) {
+            if (ev.getY() < getHeight() / 2) {
+                mTouchPosition = TOUCH_ABOVE;
+            } else {
+                mTouchPosition = TOUCH_BELOW;
+            }
             // ACTION_DOWN的时候就对view重新排序
             resetChildren();
             // 保存初次按下时arrowFlagView的Y坐标
@@ -1067,6 +1085,14 @@ public class SwipeFlingViewNew extends AdapterView {
         int left = changedView.getLeft();
         int top = changedView.getTop();
         float scrollProgressPercent = getScrollProgressPercent(left, top);
+
+        float rotation = ROTATION_DEGREES * 2.f * (changedView.getLeft() - mOriginTopViewX) / getWidth();
+        if (mTouchPosition == TOUCH_BELOW) {
+            rotation = -rotation;
+        }
+        changedView.setRotation(rotation);
+        Log.d("xxxx", "rotation:"+rotation);
+
         onScroll(changedView, isOffsetUp, scrollProgressPercent);
     }
 
@@ -1169,7 +1195,7 @@ public class SwipeFlingViewNew extends AdapterView {
         }
     }
 
-    private void onSelected(final View releasedChild, boolean isLeft, final boolean triggerByTouchMove) {
+    private void onSelected(final View releasedChild, final boolean isLeft, final boolean triggerByTouchMove) {
         if (mActiveCard == null) {
             return;
         }
@@ -1180,7 +1206,13 @@ public class SwipeFlingViewNew extends AdapterView {
         if (dx == 0) {
             dx = 1;
         }
-        int exitX = isLeft ? -width : width;
+        float offsetByRotation = getRotationWidthOffset(releasedChild);
+        Log.d("xxxx", "offsetByRotation:"+offsetByRotation
+            +";"+(releasedChild.getWidth() / (float) Math.cos(Math.toRadians(45)) - releasedChild.getWidth())
+            +";"+((float) Math.cos(Math.toRadians(60))*releasedChild.getHeight())
+                +";"+((float) Math.cos(Math.toRadians(30))*releasedChild.getHeight()));
+
+        float exitX = isLeft ? -width - offsetByRotation : width + offsetByRotation;
         int exitY = dy * width / Math.abs(dx) + mOriginTopViewY;
 
         if (exitY > halfHeight) {
@@ -1192,18 +1224,19 @@ public class SwipeFlingViewNew extends AdapterView {
         mReleasedViewList.add(releasedChild);
 
         if (triggerByTouchMove) {
-            if (mViewDragHelper.smoothSlideViewTo(releasedChild, exitX, exitY)) {
+            if (mViewDragHelper.smoothSlideViewTo(releasedChild, (int) exitX, exitY)) {
                 computeScrollByFling();
             }
         } else {
-            final int finalX = exitX;
-            final int finalY = exitY;
+            final float finalX = exitX;
+            //final int finalY = exitY;
             ValueAnimator animator = ValueAnimator.ofFloat(0.f, 1.f);
             animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {
                     float frac = animation.getAnimatedFraction();
                     releasedChild.setTranslationX(finalX * frac);
+                    releasedChild.setRotation(getExitRotation(isLeft, true) * frac);
                     onScroll(releasedChild, true, frac);
                 }
             });
@@ -1227,7 +1260,7 @@ public class SwipeFlingViewNew extends AdapterView {
                     onCardExit();
                 }
             });
-            animator.setDuration(300);
+            animator.setDuration(mExitAnimDurationByClick);
             animator.start();
         }
     }
@@ -1302,7 +1335,7 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     private void resetReleasedChildPos(final View releasedChild, int originX, int originY) {
-        final int curX = releasedChild.getLeft() ;
+        final int curX = releasedChild.getLeft();
         final int curY = releasedChild.getTop();
         final int dx = originX - curX;
         final int dy = originY - curY;
@@ -1334,6 +1367,18 @@ public class SwipeFlingViewNew extends AdapterView {
         });
         animator.setDuration(300);
         animator.start();
+    }
+
+    private float getExitRotation(boolean isLeft, boolean ignoreTouchePosition) {
+        int width = getWidth();
+        float rotation = ROTATION_DEGREES * 2.f * (width - mOriginTopViewX) / width;
+        if (!ignoreTouchePosition && mTouchPosition == TOUCH_BELOW) {
+            rotation = -rotation;
+        }
+        if (isLeft) {
+            rotation = -rotation;
+        }
+        return rotation;
     }
 
 }

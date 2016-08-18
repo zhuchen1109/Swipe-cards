@@ -190,16 +190,25 @@ public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeL
 
     @Override
     public void onSuperLikeClick() {
+        if (mSwipeFlingView.isAnimationRunning()) {
+            return;
+        }
         mSwipeFlingView.selectSuperLike(false);
     }
 
     @Override
     public void onLikeClick() {
+        if (mSwipeFlingView.isAnimationRunning()) {
+            return;
+        }
         mSwipeFlingView.selectRight(false);
     }
 
     @Override
     public void onUnLikeClick() {
+        if (mSwipeFlingView.isAnimationRunning()) {
+            return;
+        }
         mSwipeFlingView.selectLeft(false);
     }
 

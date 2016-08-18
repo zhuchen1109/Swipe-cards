@@ -79,6 +79,9 @@ public class SwipeFlingViewNew extends AdapterView {
     private int mMinFlingVelocity, mMaxFlingVelocity, mMinTouchSlop, mTapTimeout;
     private int mExitAnimDurationByClick = 300;
     private int mEnterAnimDurationByClick = 300;
+    private int mResetChildAnimDuration = 300;
+    private boolean isAnimationRunning = false;
+    private ValueAnimator mResetChildAnima;
     private ArrayList<View> mReleasedViewList = new ArrayList<>();
     private GestureDetectorCompat mMoveDetector;
 
@@ -665,10 +668,7 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     public boolean isAnimationRunning() {
-        if (flingCardListener != null) {
-            return flingCardListener.isAnimationRunning();
-        }
-        return false;
+        return isAnimationRunning;
     }
 
     public void setMaxVisible(int MAX_VISIBLE) {
@@ -1162,6 +1162,8 @@ public class SwipeFlingViewNew extends AdapterView {
         if (mActiveCard == null) {
             return;
         }
+        isAnimationRunning = true;
+
         final int width = getWidth();
         int halfHeight = getHeight() / 2;
         int dx = releasedChild.getLeft() - mOriginTopViewX;
@@ -1221,6 +1223,7 @@ public class SwipeFlingViewNew extends AdapterView {
 
                 private void onEnd() {
                     onCardExited(isLeft, triggerByTouchMove, isSuperLike);
+                    isAnimationRunning = false;
                 }
             });
             animator.setDuration(mExitAnimDurationByClick);
@@ -1230,7 +1233,6 @@ public class SwipeFlingViewNew extends AdapterView {
 
     protected void computeScrollByFling(final boolean isLeft, final boolean triggerByTouchMove, final boolean isSuperLike) {
         if (mViewDragHelper.continueSettling(true)) {
-            //Log.d("xxxx", "computeScrollByFling running");
             ViewCompat.postOnAnimation(this, new Runnable() {
                 @Override
                 public void run() {
@@ -1238,8 +1240,8 @@ public class SwipeFlingViewNew extends AdapterView {
                 }
             });
         } else {
-            Log.d("xxxx", "computeScrollByFlingover " + mViewDragHelper.getViewDragState());
             // 动画结束
+            isAnimationRunning = false;
             synchronized (this) {
                 onCardExited(isLeft, triggerByTouchMove, isSuperLike);
             }
@@ -1314,21 +1316,26 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     private void resetReleasedChildPos(final View releasedChild, int originX, int originY) {
+        if (mResetChildAnima != null && mResetChildAnima.isRunning()) {
+            mResetChildAnima.cancel();
+        }
         final int curX = releasedChild.getLeft();
         final int curY = releasedChild.getTop();
         final int dx = originX - curX;
         final int dy = originY - curY;
-        ValueAnimator animator = ValueAnimator.ofFloat(0.f, 1.f);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+        mResetChildAnima = ValueAnimator.ofFloat(0.f, 1.f);
+        mResetChildAnima.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
+                Log.d("xxxx", "mResetChildAnima "+mResetChildAnima);
                 float frac = animation.getAnimatedFraction();
                 releasedChild.offsetLeftAndRight((int) (curX + dx * frac - releasedChild.getLeft()));
                 releasedChild.offsetTopAndBottom((int) (curY + dy * frac - releasedChild.getTop()));
                 onScroll(releasedChild, true);
             }
         });
-        animator.addListener(new AnimatorListenerAdapter() {
+        mResetChildAnima.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
                 super.onAnimationStart(animation);
@@ -1350,8 +1357,8 @@ public class SwipeFlingViewNew extends AdapterView {
                 }
             }
         });
-        animator.setDuration(300);
-        animator.start();
+        mResetChildAnima.setDuration(mResetChildAnimDuration);
+        mResetChildAnima.start();
     }
 
     private float getExitRotation(boolean isLeft, boolean ignoreTouchePosition) {

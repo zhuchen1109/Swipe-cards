@@ -28,6 +28,7 @@ import java.util.ArrayList;
 
 /**
  * 支持侧滑的叠加组件
+ *
  * @zc
  */
 public class SwipeFlingViewNew extends AdapterView {
@@ -71,6 +72,7 @@ public class SwipeFlingViewNew extends AdapterView {
     private int mCardWidth;
     /**
      * 滑动卡片 起始位置在卡片上半部分还是下半部分
+     *
      * @see #TOUCH_ABOVE
      * @see #TOUCH_BELOW
      */
@@ -120,7 +122,7 @@ public class SwipeFlingViewNew extends AdapterView {
         float tempScale = 1.f;
         float verticalOffset = 0;
         while (index < MAX_VISIBLE) {
-            if (index != 0 && index != MAX_VISIBLE -1) {
+            if (index != 0 && index != MAX_VISIBLE - 1) {
                 tempScale -= SCALE_STEP;
                 verticalOffset += mCardVerticalOffset;
             }
@@ -202,7 +204,7 @@ public class SwipeFlingViewNew extends AdapterView {
                     while (startingIndex < Math.min(adapterCount, MAX_VISIBLE)) {
                         //log("curChildCount:"+curChildCount);
                         //计算要复用view的index
-                        int recycleActiveIndex = curChildCount >= MAX_VISIBLE -1 ?
+                        int recycleActiveIndex = curChildCount >= MAX_VISIBLE - 1 ?
                                 startingIndex : MAX_VISIBLE - 1 - (curChildCount + startingIndex);
                         if (recycleActiveIndex > -1 && mRecycleBin.getActiveView(recycleActiveIndex) == null) {
                             int position = mCurPositon + startingIndex + curChildCount;
@@ -353,7 +355,6 @@ public class SwipeFlingViewNew extends AdapterView {
             lp = new SwipeLayoutParame(viewLp);
             child.addView(view, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
             child.setOnClickListener(mItemClickCallback);
-            Log.d("xxxx", "mItemClickCallback");
         }
         child.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         addViewInLayout(child, isAddFirstCard ? -1 : 0, lp, true);
@@ -479,6 +480,7 @@ public class SwipeFlingViewNew extends AdapterView {
 
     /**
      * 返回上一个已经划过去的卡片
+     *
      * @param fromLeft true:从左边返回 反之右边返回
      */
     public void selectComeBackCard(boolean fromLeft) {
@@ -522,7 +524,6 @@ public class SwipeFlingViewNew extends AdapterView {
             lp = new SwipeLayoutParame(viewLp);
             child.addView(view, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
             child.setOnClickListener(mItemClickCallback);
-            Log.d("xxxx", "mItemClickCallback addViewOfComebackCard");
         }
         child.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         addViewInLayout(child, isAddFirstCard ? -1 : 0, lp, true);
@@ -621,7 +622,7 @@ public class SwipeFlingViewNew extends AdapterView {
         anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                float frac =animation.getAnimatedFraction();
+                float frac = animation.getAnimatedFraction();
                 frame.setX(x + (originX - x) * frac);
                 frame.setRotation(rotation * (1 - frac));
                 updateChildrenOffset(false, frac);
@@ -781,7 +782,9 @@ public class SwipeFlingViewNew extends AdapterView {
                 if (oldView == mActiveViews.get(i)) {
                     mActiveViews.remove(i);
                     resetChildView(oldView);
-                    pritfViews("removeAndAddLastActiveView remove");
+                    if (DEBUG) {
+                        pritfViews("removeAndAddLastActiveView remove");
+                    }
                     break;
                 }
             }
@@ -797,7 +800,7 @@ public class SwipeFlingViewNew extends AdapterView {
 
         void removeActiveView(View view) {
             if (view == null) return;
-            for (int i = mActiveViews.size() -1; i >= 0; i--) {
+            for (int i = mActiveViews.size() - 1; i >= 0; i--) {
                 if (view == mActiveViews.get(i)) {
                     mActiveViews.remove(i);
                     mRecycleView = view;
@@ -805,8 +808,8 @@ public class SwipeFlingViewNew extends AdapterView {
                     mActiveViews.add(0, null);
                     if (DEBUG) {
                         Log.d(TAG, "removeActiveView:" + i + ";");
+                        pritfViews("removeActiveView");
                     }
-                    pritfViews("removeActiveView");
                     break;
                 }
             }
@@ -965,16 +968,6 @@ public class SwipeFlingViewNew extends AdapterView {
             // action_down时就让mDragHelper开始工作，否则有时候导致异常
             mViewDragHelper.processTouchEvent(ev);
         }
-
-        if (action == MotionEvent.ACTION_DOWN) {
-            Log.d("xxxx", "MotionEvent.ACTION_DOWN");
-        }
-        if (action == MotionEvent.ACTION_UP) {
-            Log.d("xxxx", "MotionEvent.ACTION_UP");
-        } else if (action == MotionEvent.ACTION_CANCEL) {
-            Log.d("xxxx", "MotionEvent.ACTION_CANCEL");
-        }
-
         return should && moveFlag;
     }
 
@@ -1015,7 +1008,6 @@ public class SwipeFlingViewNew extends AdapterView {
             rotation = -rotation;
         }
         changedView.setRotation(rotation);
-        Log.d("xxxx", "rotation:"+rotation);
 
         onScroll(changedView, isOffsetUp, scrollProgressPercent, true);
     }
@@ -1029,6 +1021,7 @@ public class SwipeFlingViewNew extends AdapterView {
 
     /**
      * 用来判断是否允许向左滑走
+     *
      * @return
      */
     private boolean canLeftCardExit() {
@@ -1040,6 +1033,7 @@ public class SwipeFlingViewNew extends AdapterView {
 
     /**
      * 用来判断是否允许向右滑走
+     *
      * @return
      */
     private boolean canRightCardExit() {
@@ -1051,6 +1045,7 @@ public class SwipeFlingViewNew extends AdapterView {
 
     /**
      * 根据速度和拖拽的距离判断是否能向左划走
+     *
      * @param xvel
      * @param left
      * @return
@@ -1061,6 +1056,7 @@ public class SwipeFlingViewNew extends AdapterView {
 
     /**
      * 根据速度和拖拽的距离判断是否能向右划走
+     *
      * @param xvel
      * @param left
      * @return
@@ -1070,12 +1066,10 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     private boolean movedBeyondLeftBorder(int left) {
-        //Log.d("xxxx", "movedBeyondLeftBorder left:" + left + ";leftBorder:" + leftBorder()+";"+(left + mCardHalfWidth < leftBorder()));
         return left + mCardHalfWidth < leftBorder();
     }
 
     private boolean movedBeyondRightBorder(int left) {
-        //Log.d("xxxx", "movedBeyondRightBorder left:" + left + ";rightBorder:" + rightBorder()+";"+(left + mCardHalfWidth > rightBorder()));
         return left + mCardHalfWidth > rightBorder();
     }
 
@@ -1089,7 +1083,6 @@ public class SwipeFlingViewNew extends AdapterView {
 
     protected float computeScrollPercent(int left, int top) {
         float zeroToOneValue = (left + mCardHalfWidth - leftBorder()) / (rightBorder() - leftBorder());
-        //Log.d("xxxx", "zeroToOneValue:"+zeroToOneValue);
         return (zeroToOneValue * 2.f - 1f);
     }
 
@@ -1104,12 +1097,12 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     protected void onViewPositionChanged(View changedView, int left, int top,
-                                      int dx, int dy) {
+                                         int dx, int dy) {
         onScroll(changedView, true);
     }
 
     protected boolean tryCaptureView(View child, int pointerId) {
-        Log.d(TAG, "tryCaptureView visibility:" + (child.getVisibility() == View.VISIBLE)
+        log("tryCaptureView visibility:" + (child.getVisibility() == View.VISIBLE)
                 + ";ScaleX:" + (child.getScaleX())
                 + ";hasVaildBin:" + mRecycleBin.hasVaildBin()
                 + ";isTopView:" + mRecycleBin.isTopView(child));
@@ -1127,12 +1120,10 @@ public class SwipeFlingViewNew extends AdapterView {
         if (mFlingListener != null) {
             mFlingListener.onStartDragCard();
         }
-        Log.d("xxxx", "mOriginTopViewX:"+mOriginTopViewX+";mOriginTopViewY:"+mOriginTopViewY);
     }
 
     protected void onViewReleased(View releasedChild, float xvel, float yvel) {
         //animToSide((CardItemView) releasedChild, xvel);
-        Log.d("xxxx", "xvel:" + xvel+";mMinFlingVelocity:"+mMinFlingVelocity);
         int left = releasedChild.getLeft();
         if (canMovedLeft(xvel, left) && canLeftCardExit()) {
             //fling left
@@ -1151,7 +1142,6 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     /**
-     *
      * @param releasedChild
      * @param isLeft
      * @param triggerByTouchMove
@@ -1328,7 +1318,6 @@ public class SwipeFlingViewNew extends AdapterView {
         mResetChildAnima.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                Log.d("xxxx", "mResetChildAnima "+mResetChildAnima);
                 float frac = animation.getAnimatedFraction();
                 releasedChild.offsetLeftAndRight((int) (curX + dx * frac - releasedChild.getLeft()));
                 releasedChild.offsetTopAndBottom((int) (curY + dy * frac - releasedChild.getTop()));
@@ -1379,19 +1368,16 @@ public class SwipeFlingViewNew extends AdapterView {
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float dx,
                                 float dy) {
             // 拖动了，touch不往下传递
-            Log.d("xxxxx", "onScroll dx:"+dx+";dy:"+dy+";mTouchSlop:"+mMinTouchSlop);
             return Math.abs(dy) + Math.abs(dx) > mMinTouchSlop;
         }
 
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
-            Log.d("xxxxx", "onSingleTapConfirmed");
             return super.onSingleTapConfirmed(e);
         }
 
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
-            Log.d("xxxxx", "onSingleTapUp");
             return super.onSingleTapUp(e);
         }
     }

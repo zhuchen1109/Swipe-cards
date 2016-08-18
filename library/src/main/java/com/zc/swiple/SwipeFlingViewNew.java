@@ -1421,6 +1421,7 @@ public class SwipeFlingViewNew extends AdapterView {
             if (mOnItemClickListener != null) {
                 mOnItemClickListener.onItemClicked(mCurPositon, v);
             }
+            mViewDragHelper.setDragState(ViewDragHelper.STATE_IDLE);
             if (mFlingListener != null) {
                 mFlingListener.onEndDragCard();
             }

@@ -669,7 +669,7 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     public boolean isAnimationRunning() {
-        return isAnimationRunning;
+        return isAnimationRunning || mViewDragHelper.getViewDragState() != ViewDragHelper.STATE_IDLE;
     }
 
     public void setMaxVisible(int MAX_VISIBLE) {
@@ -973,7 +973,11 @@ public class SwipeFlingViewNew extends AdapterView {
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        mViewDragHelper.processTouchEvent(ev);
+        try {
+            mViewDragHelper.processTouchEvent(ev);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         return true;
     }
 

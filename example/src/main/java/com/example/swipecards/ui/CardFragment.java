@@ -171,7 +171,7 @@ public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeL
     @Override
     public void onScroll(View selectedView, float scrollProgressPercent) {
         if (DEBUG) {
-            Log.d(TAG, "SwipeFlingView onScroll");
+            Log.d(TAG, "SwipeFlingView onScroll " + scrollProgressPercent);
         }
     }
 

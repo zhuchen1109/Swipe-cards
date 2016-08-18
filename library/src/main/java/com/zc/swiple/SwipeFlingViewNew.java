@@ -979,9 +979,19 @@ public class SwipeFlingViewNew extends AdapterView {
 
     private static class SwipeChildContainer extends FrameLayout {
 
+        private boolean canCallbackForScroll = true;
+
         public SwipeChildContainer(Context context, AttributeSet attrs) {
             super(context, attrs);
             setClipChildren(false);
+        }
+
+        public void setCanCallbackForScroll(boolean canCallbackForScroll) {
+            this.canCallbackForScroll = canCallbackForScroll;
+        }
+
+        public boolean isCanCallbackForScroll() {
+            return canCallbackForScroll;
         }
 
         @Override
@@ -999,6 +1009,10 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     private void onScroll(View changedView, boolean isOffsetUp) {
+        onScroll(changedView, isOffsetUp, true);
+    }
+
+    private void onScroll(View changedView, boolean isOffsetUp, final boolean isCallbackForOnScroll) {
         int left = changedView.getLeft();
         int top = changedView.getTop();
         float scrollProgressPercent = getScrollProgressPercent(left, top);
@@ -1009,12 +1023,12 @@ public class SwipeFlingViewNew extends AdapterView {
         }
         changedView.setRotation(rotation);
 
-        onScroll(changedView, isOffsetUp, scrollProgressPercent, true);
+        onScroll(changedView, isOffsetUp, scrollProgressPercent, isCallbackForOnScroll);
     }
 
     public void onScroll(View changedView, boolean isOffsetUp, float scrollProgressPercent, final boolean isCallbackForOnScroll) {
         if (isCallbackForOnScroll && mFlingListener != null) {
-            mFlingListener.onScroll(changedView, scrollProgressPercent);
+            mFlingListener.onScroll(converChildView(changedView), scrollProgressPercent);
         }
         updateChildrenOffset(isOffsetUp, scrollProgressPercent);
     }
@@ -1098,7 +1112,7 @@ public class SwipeFlingViewNew extends AdapterView {
 
     protected void onViewPositionChanged(View changedView, int left, int top,
                                          int dx, int dy) {
-        onScroll(changedView, true);
+        onScroll(changedView, true, isCanCallbackForScroll(changedView));
     }
 
     protected boolean tryCaptureView(View child, int pointerId) {
@@ -1117,6 +1131,7 @@ public class SwipeFlingViewNew extends AdapterView {
 
     protected void onViewCaptured(View capturedChild, int activePointerId) {
         updateActiveViewData(capturedChild);
+        setCanCallbackForScroll(capturedChild, true);
         if (mFlingListener != null) {
             mFlingListener.onStartDragCard();
         }
@@ -1180,6 +1195,7 @@ public class SwipeFlingViewNew extends AdapterView {
 
         if (triggerByTouchMove) {
             if (mViewDragHelper.smoothSlideViewTo(releasedChild, (int) exitX, exitY)) {
+                setCanCallbackForScroll(releasedChild, false);
                 computeScrollByFling(isLeft, triggerByTouchMove, isSuperLike);
             }
         } else {
@@ -1219,6 +1235,19 @@ public class SwipeFlingViewNew extends AdapterView {
             animator.setDuration(mExitAnimDurationByClick);
             animator.start();
         }
+    }
+
+    private void setCanCallbackForScroll(View releasedChild, boolean canCallbackForScroll) {
+        if (releasedChild instanceof SwipeChildContainer) {
+            ((SwipeChildContainer) releasedChild).setCanCallbackForScroll(canCallbackForScroll);
+        }
+    }
+
+    private boolean isCanCallbackForScroll(View releasedChild) {
+        if (releasedChild instanceof SwipeChildContainer) {
+           return ((SwipeChildContainer) releasedChild).isCanCallbackForScroll();
+        }
+        return true;
     }
 
     protected void computeScrollByFling(final boolean isLeft, final boolean triggerByTouchMove, final boolean isSuperLike) {

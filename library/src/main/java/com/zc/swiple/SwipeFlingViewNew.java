@@ -1263,10 +1263,10 @@ public class SwipeFlingViewNew extends AdapterView {
                 }
             });
         } else {
-            // 动画结束
-            isAnimationRunning = false;
             synchronized (this) {
                 onCardExited(isLeft, triggerByTouchMove, isSuperLike);
+                // 动画结束
+                isAnimationRunning = false;
             }
         }
     }

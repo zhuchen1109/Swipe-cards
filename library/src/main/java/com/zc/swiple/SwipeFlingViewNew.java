@@ -6,7 +6,6 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.database.DataSetObserver;
-import android.graphics.PointF;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewCompat;
@@ -33,43 +32,30 @@ import java.util.ArrayList;
  */
 public class SwipeFlingViewNew extends AdapterView {
 
-    protected final static boolean DEBUG = true;
-    static final String TAG = SwipeFlingViewNew.class.getSimpleName();
-
+    private final static boolean DEBUG = true;
+    private final static String TAG = SwipeFlingViewNew.class.getSimpleName();
     private final static int TOUCH_ABOVE = 0;
     private final static int TOUCH_BELOW = 1;
+    private final static int MIN_FLING_VELOCITY = 300;//dips
+    private int mExitAnimDurationByClick  = 300;
+    private int mEnterAnimDurationByClick = 300;
+    private int mResetChildAnimDuration   = 300;
 
-    private static final int MIN_FLING_VELOCITY = 300; // dips
-    private float MAX_COS;
-    private int MAX_VISIBLE = 4;
+    private int MAX_VISIBLE = 4;//最多可显示的卡片数
     private int MIN_ADAPTER_STACK = 3;
-    private float ROTATION_DEGREES = 15.f;
-    private float SCALE_STEP = 0.1f;
-    private float[] CHILD_SCALE_BY_INDEX;
-    private float[] CHILD_VERTICAL_OFFSET_BY_INDEX;
-    private float mCardVerticalOffset = -1;
-    private float mCardHeight = -1;
-    private RecycleBin mRecycleBin;
+    private int mMinFlingVelocity;
+    private int mMinTouchSlop;
+    private float MAX_COS;
+    private float ROTATION_DEGREES = 15.f;//卡片在拖拽或动画时 最大旋转角度
+    private float SCALE_STEP = 0.1f;//定义卡片每级缩放的比例
+    private float mCardVerticalOffset = 0;//定义卡片每级偏移值
+    private float[] CHILD_SCALE_BY_INDEX;//存放各级卡片缩放系数集
+    private float[] CHILD_VERTICAL_OFFSET_BY_INDEX;//存放各级卡片偏移值集
+
+    /**
+     * 用于记录当前卡片的索引，非常重要的属性
+     */
     private int mCurPositon;
-    private int mPositonByEmptyData;//命中卡片集合为空时 记录此时的position
-
-    private int heightMeasureSpec;
-    private int widthMeasureSpec;
-    private Adapter mAdapter;
-    private int LAST_OBJECT_IN_STACK = 0;
-    private onSwipeListener mFlingListener;
-    private AdapterDataSetObserver mDataSetObserver;
-    private boolean mInLayout = false;
-    private View mActiveCard = null;
-    private OnItemClickListener mOnItemClickListener;
-    private SwipeFlingCardListener flingCardListener;
-    private PointF mLastTouchPoint;
-    private boolean hasCardTouched = false;//因为现在设计的问题 在卡片划走 下一张卡片绑定事件有空挡期 会导致事件被父容器捕获
-
-    private ViewDragHelper mViewDragHelper;
-
-    private int mOriginTopViewX = 0, mOriginTopViewY = 0; //视图初始位置
-    private int mCardWidth;
     /**
      * 滑动卡片 起始位置在卡片上半部分还是下半部分
      *
@@ -77,15 +63,27 @@ public class SwipeFlingViewNew extends AdapterView {
      * @see #TOUCH_BELOW
      */
     private int mTouchPosition;
-    private float mCardHalfWidth;
-    private int mMinFlingVelocity, mMaxFlingVelocity, mMinTouchSlop, mTapTimeout;
-    private int mExitAnimDurationByClick = 300;
-    private int mEnterAnimDurationByClick = 300;
-    private int mResetChildAnimDuration = 300;
+    private int mOriginTopViewX = 0;//视图初始X位置
+    private int mOriginTopViewY = 0;//视图初始Y位置
+    private int widthMeasureSpec;
+    private int heightMeasureSpec;
+    private int LAST_OBJECT_IN_STACK = 0;
+    private int mCardWidth;
+    private int mCardHalfWidth;
+    private int mCardHeight;
+    private boolean mInLayout = false;
     private boolean isAnimationRunning = false;
+
+    private View mActiveCard = null;
+    private RecycleBin mRecycleBin;
+    private Adapter mAdapter;
+    private AdapterDataSetObserver mDataSetObserver;
+    private OnItemClickListener mOnItemClickListener;
+    private onSwipeListener mFlingListener;
+    private ViewDragHelper mViewDragHelper;
+    private GestureDetectorCompat mMoveDetector;
     private ValueAnimator mResetChildAnima;
     private ArrayList<View> mReleasedViewList = new ArrayList<>();
-    private GestureDetectorCompat mMoveDetector;
 
     public SwipeFlingViewNew(Context context) {
         this(context, null);
@@ -105,17 +103,15 @@ public class SwipeFlingViewNew extends AdapterView {
         MAX_COS = (float) Math.cos(Math.toRadians(17 * 2));//目前计算还是有些问题 暂时这样
 
         a.recycle();
-
         init(context);
     }
 
     public void init(final Context context) {
-        mViewDragHelper = ViewDragHelper.create(this, 1, new SwipeFlingDragCallBack(this));
-
         float density = context.getResources().getDisplayMetrics().density;
-        mCardVerticalOffset = 6f * density;
-
+        mViewDragHelper = ViewDragHelper.create(this, 1, new SwipeFlingDragCallBack(this));
         mRecycleBin = new RecycleBin();
+
+        mCardVerticalOffset = 6f * density;
         CHILD_SCALE_BY_INDEX = new float[MAX_VISIBLE];
         CHILD_VERTICAL_OFFSET_BY_INDEX = new float[MAX_VISIBLE];
         int index = 0;
@@ -143,10 +139,8 @@ public class SwipeFlingViewNew extends AdapterView {
         }
 
         ViewConfiguration config = ViewConfiguration.get(getContext());
-        mMinFlingVelocity = (int) (MIN_FLING_VELOCITY * density);
-        mMaxFlingVelocity = config.getScaledMaximumFlingVelocity();
         mMinTouchSlop = config.getScaledTouchSlop();
-        mTapTimeout = ViewConfiguration.getTapTimeout();
+        mMinFlingVelocity = (int) (MIN_FLING_VELOCITY * density);
 
         mMoveDetector = new GestureDetectorCompat(context,
                 new MoveDetector());
@@ -193,11 +187,12 @@ public class SwipeFlingViewNew extends AdapterView {
         mInLayout = true;
         final int adapterCount = mAdapter.getCount();
 
-        log("onLayout hasVaildBin:" + mRecycleBin.hasVaildBin() + ";mCurPositon:" + mCurPositon + ";adapterCount:" + adapterCount);
+        log("onLayout hasActiveView:" + mRecycleBin.hasActiveView() + ";mCurPositon:"
+                + mCurPositon + ";adapterCount:" + adapterCount);
         if (adapterCount == 0 || mCurPositon >= adapterCount) {
             removeAllViewsInLayout();
         } else {
-            if (mRecycleBin.hasVaildBin()) {
+            if (mRecycleBin.hasActiveView()) {
                 int startingIndex = 0;
                 if (adapterCount > MAX_VISIBLE) {
                     int curChildCount = getChildCount();
@@ -231,21 +226,9 @@ public class SwipeFlingViewNew extends AdapterView {
                     setTopView();
                 }
             } else {
-                View topCard = getChildAt(LAST_OBJECT_IN_STACK);
-                if (mActiveCard != null && topCard != null && topCard == mActiveCard) {
-                    if (this.flingCardListener.isTouching()) {
-                        PointF lastPoint = this.flingCardListener.getLastPoint();
-                        if (this.mLastTouchPoint == null || !this.mLastTouchPoint.equals(lastPoint)) {
-                            this.mLastTouchPoint = lastPoint;
-                            removeViewsInLayout(0, LAST_OBJECT_IN_STACK);
-                            layoutChildren(1, adapterCount);
-                        }
-                    }
-                } else {
-                    removeAllViewsInLayout();
-                    layoutChildren(0, adapterCount);
-                    setTopView();
-                }
+                removeAllViewsInLayout();
+                layoutChildren(0, adapterCount);
+                setTopView();
             }
         }
 
@@ -445,10 +428,6 @@ public class SwipeFlingViewNew extends AdapterView {
         return childView;
     }
 
-    public SwipeFlingCardListener getTopCardListener() {
-        return flingCardListener;
-    }
-
     public void selectLeft() {
         selectLeft(true);
     }
@@ -457,24 +436,24 @@ public class SwipeFlingViewNew extends AdapterView {
         selectRight(true);
     }
 
-    public void selectLeft(boolean isCallbackForOnScroll) {
+    public void selectLeft(boolean isCallbackByOnScroll) {
         if (mActiveCard != null) {
             updateActiveViewData();
-            onSelected(mActiveCard, true, false, false, isCallbackForOnScroll);
+            onSelected(mActiveCard, true, false, false, isCallbackByOnScroll);
         }
     }
 
-    public void selectRight(boolean isCallbackForOnScroll) {
+    public void selectRight(boolean isCallbackByOnScroll) {
         if (mActiveCard != null) {
             updateActiveViewData();
-            onSelected(mActiveCard, false, false, false, isCallbackForOnScroll);
+            onSelected(mActiveCard, false, false, false, isCallbackByOnScroll);
         }
     }
 
-    public void selectSuperLike(boolean isCallbackForOnScroll) {
+    public void selectSuperLike(boolean isCallbackByOnScroll) {
         if (mActiveCard != null) {
             updateActiveViewData();
-            onSelected(mActiveCard, false, false, true, isCallbackForOnScroll);
+            onSelected(mActiveCard, false, false, true, isCallbackByOnScroll);
         }
     }
 
@@ -753,197 +732,9 @@ public class SwipeFlingViewNew extends AdapterView {
 
     }
 
-    private class RecycleBin {
-        private ArrayList<View> mActiveViews;
-        private View mRecycleView;
-
-        RecycleBin() {
-            mActiveViews = new ArrayList(MAX_VISIBLE);
-            for (int i = 0; i < MAX_VISIBLE; i++) {
-                mActiveViews.add(null);
-            }
-        }
-
-        void addActiveView(View view, int pos) {
-            //SwipeLayoutParame lp = (SwipeLayoutParame) view.getLayoutParams();
-            //int pos = lp.position;
-            if (DEBUG) {
-                //log(view + ";pos:" + pos);
-                //pritfViews("preadd");
-            }
-            View itemView = mActiveViews.set(pos, view);
-            if (DEBUG) {
-                pritfViews("postadd");
-            }
-        }
-
-        void removeAndAddLastActiveView(View oldView, View newView) {
-            for (int i = 0; i < mActiveViews.size(); i++) {
-                if (oldView == mActiveViews.get(i)) {
-                    mActiveViews.remove(i);
-                    resetChildView(oldView);
-                    if (DEBUG) {
-                        pritfViews("removeAndAddLastActiveView remove");
-                    }
-                    break;
-                }
-            }
-
-            if (newView != null) {
-                mActiveViews.add(newView);
-            }
-
-            if (DEBUG) {
-                pritfViews("removeAndAddLastActiveView add");
-            }
-        }
-
-        void removeActiveView(View view) {
-            if (view == null) return;
-            for (int i = mActiveViews.size() - 1; i >= 0; i--) {
-                if (view == mActiveViews.get(i)) {
-                    mActiveViews.remove(i);
-                    mRecycleView = view;
-                    resetChildView(mRecycleView);
-                    mActiveViews.add(0, null);
-                    if (DEBUG) {
-                        Log.d(TAG, "removeActiveView:" + i + ";");
-                        pritfViews("removeActiveView");
-                    }
-                    break;
-                }
-            }
-        }
-
-        View getActiveView(int pos) {
-            return mActiveViews.get(pos);
-        }
-
-        View getLastActiveView() {
-            if (mActiveViews.size() == MAX_VISIBLE) {
-                return mActiveViews.get(0);
-            }
-            return null;
-        }
-
-        View getAndResetRecycleView() {
-            View view = mRecycleView;
-            mRecycleView = null;
-            return view;
-        }
-
-        View getRecycleView() {
-            return mRecycleView;
-        }
-
-        void resetRecycleView() {
-            this.mRecycleView = null;
-        }
-
-        boolean hasVaildBin() {
-            if (mAdapter == null || mActiveViews.size() == 0) {
-                return false;
-            }
-
-            if (DEBUG) {
-                //pritfViews("hasVaildBin");
-            }
-
-            int count = mActiveViews.size();
-            int num = 0;
-            for (int i = 0; i < count; i++) {
-                if (mActiveViews.get(i) == null) {
-                    ++num;
-                }
-            }
-            if (num == count) {
-                return false;
-            }
-            return true;
-        }
-
-        void clearCache() {
-            for (int i = 0; i < MAX_VISIBLE; i++) {
-                mActiveViews.set(i, null);
-            }
-            mRecycleView = null;
-        }
-
-        boolean isTopView(View view) {
-            int index = mActiveViews.indexOf(view);
-            if (index == mActiveViews.size() - 1) {
-                return true;
-            }
-            return false;
-        }
-
-        public void pritfViews(String tag) {
-            //test
-            String ss = tag + " activeviews:";
-            for (int i = 0; i < mActiveViews.size(); i++) {
-                ss += (mActiveViews.get(i) != null ? converChildView(mActiveViews.get(i)).getTag() : null) + ">>";
-            }
-            log(ss);
-        }
-
-    }
-
-    private class SwipeLayoutParame extends FrameLayout.LayoutParams {
-
-        int position;
-
-        public SwipeLayoutParame(Context c, AttributeSet attrs) {
-            super(c, attrs);
-        }
-
-        public SwipeLayoutParame(int width, int height) {
-            super(width, height);
-        }
-
-        public SwipeLayoutParame(SwipeLayoutParame source) {
-            super((MarginLayoutParams) source);
-            this.gravity = source.gravity;
-        }
-    }
-
-    public interface OnItemClickListener {
-        void onItemClicked(int itemPosition, Object dataObject);
-    }
-
-    public interface onSwipeListener {
-
-        //void onStart(SwipeFlingViewNew swipeFlingView);
-
-        void onStartDragCard();
-
-        void onPreCardExit();
-
-        void onTopCardViewFinish();//top card 设置完毕调用
-
-        boolean canLeftCardExit();
-
-        boolean canRightCardExit();
-
-        void onLeftCardExit(View view, Object dataObject, boolean triggerByTouchMove);
-
-        void onRightCardExit(View view, Object dataObject, boolean triggerByTouchMove);
-
-        void onSuperLike(View view, Object dataObject, boolean triggerByTouchMove);
-
-        void onAdapterAboutToEmpty(int itemsInAdapter);
-
-        void onAdapterEmpty();
-
-        void onScroll(View selectedView, float scrollProgressPercent);
-
-        void onEndDragCard();
-
-        //void onEnd();
-    }
-
     private void log(String log) {
         if (DEBUG) {
-            Log.d(TAG, log);
+            Log.v(TAG, log);
         }
     }
 
@@ -981,42 +772,11 @@ public class SwipeFlingViewNew extends AdapterView {
         return true;
     }
 
-    private static class SwipeChildContainer extends FrameLayout {
-
-        private boolean canCallbackForScroll = true;
-
-        public SwipeChildContainer(Context context, AttributeSet attrs) {
-            super(context, attrs);
-            setClipChildren(false);
-        }
-
-        public void setCanCallbackForScroll(boolean canCallbackForScroll) {
-            this.canCallbackForScroll = canCallbackForScroll;
-        }
-
-        public boolean isCanCallbackForScroll() {
-            return canCallbackForScroll;
-        }
-
-        @Override
-        public void setOnTouchListener(OnTouchListener l) {
-            super.setOnTouchListener(l);
-        }
-
-        @Override
-        public boolean dispatchTouchEvent(MotionEvent ev) {
-            if (ev.getAction() == MotionEvent.ACTION_DOWN) {
-                getParent().getParent().requestDisallowInterceptTouchEvent(true);
-            }
-            return super.dispatchTouchEvent(ev);
-        }
-    }
-
     private void onScroll(View changedView, boolean isOffsetUp) {
         onScroll(changedView, isOffsetUp, true);
     }
 
-    private void onScroll(View changedView, boolean isOffsetUp, final boolean isCallbackForOnScroll) {
+    private void onScroll(View changedView, boolean isOffsetUp, final boolean isCallbackByOnScroll) {
         int left = changedView.getLeft();
         int top = changedView.getTop();
         float scrollProgressPercent = getScrollProgressPercent(left, top);
@@ -1027,11 +787,11 @@ public class SwipeFlingViewNew extends AdapterView {
         }
         changedView.setRotation(rotation);
 
-        onScroll(changedView, isOffsetUp, scrollProgressPercent, isCallbackForOnScroll);
+        onScroll(changedView, isOffsetUp, scrollProgressPercent, isCallbackByOnScroll);
     }
 
-    public void onScroll(View changedView, boolean isOffsetUp, float scrollProgressPercent, final boolean isCallbackForOnScroll) {
-        if (isCallbackForOnScroll && mFlingListener != null) {
+    public void onScroll(View changedView, boolean isOffsetUp, float scrollProgressPercent, final boolean isCallbackByOnScroll) {
+        if (isCallbackByOnScroll && mFlingListener != null) {
             mFlingListener.onScroll(converChildView(changedView), scrollProgressPercent);
         }
         updateChildrenOffset(isOffsetUp, scrollProgressPercent);
@@ -1122,11 +882,11 @@ public class SwipeFlingViewNew extends AdapterView {
     protected boolean tryCaptureView(View child, int pointerId) {
         log("tryCaptureView visibility:" + (child.getVisibility() == View.VISIBLE)
                 + ";ScaleX:" + (child.getScaleX())
-                + ";hasVaildBin:" + mRecycleBin.hasVaildBin()
+                + ";hasActiveView:" + mRecycleBin.hasActiveView()
                 + ";isTopView:" + mRecycleBin.isTopView(child));
         if (child.getVisibility() != View.VISIBLE
                 || child.getScaleX() <= 1.0f - SCALE_STEP
-                || !mRecycleBin.hasVaildBin()
+                || !mRecycleBin.hasActiveView()
                 || !mRecycleBin.isTopView(child)) {
             return false;
         }
@@ -1165,9 +925,9 @@ public class SwipeFlingViewNew extends AdapterView {
      * @param isLeft
      * @param triggerByTouchMove
      * @param isSuperLike
-     * @param isCallbackForOnScroll 配合triggerByTouchMove=false，若isCallbackForOnScroll=true，那么会在动画时SwipeFlingView对外回调函数onScroll，反之不会
+     * @param isCallbackByOnScroll 配合triggerByTouchMove=false，若isCallbackForOnScroll=true，那么会在动画时SwipeFlingView对外回调函数onScroll，反之不会
      */
-    private void onSelected(final View releasedChild, final boolean isLeft, final boolean triggerByTouchMove, final boolean isSuperLike, final boolean isCallbackForOnScroll) {
+    private void onSelected(final View releasedChild, final boolean isLeft, final boolean triggerByTouchMove, final boolean isSuperLike, final boolean isCallbackByOnScroll) {
         if (mActiveCard == null) {
             return;
         }
@@ -1212,7 +972,7 @@ public class SwipeFlingViewNew extends AdapterView {
                     float frac = animation.getAnimatedFraction();
                     releasedChild.setTranslationX(finalX * frac);
                     releasedChild.setRotation(getExitRotation(isLeft, true) * frac);
-                    onScroll(releasedChild, true, frac, isCallbackForOnScroll);
+                    onScroll(releasedChild, true, frac, isCallbackByOnScroll);
                 }
             });
             animator.addListener(new AnimatorListenerAdapter() {
@@ -1335,7 +1095,7 @@ public class SwipeFlingViewNew extends AdapterView {
         mOriginTopViewX = activeView.getLeft();
         mOriginTopViewY = activeView.getTop();
         mCardWidth = activeView.getWidth();
-        mCardHalfWidth = mCardWidth * .5f;
+        mCardHalfWidth = mCardWidth / 2;
     }
 
     private void resetReleasedChildPos(final View releasedChild, int originX, int originY) {
@@ -1395,7 +1155,69 @@ public class SwipeFlingViewNew extends AdapterView {
         return rotation;
     }
 
-    class MoveDetector extends GestureDetector.SimpleOnGestureListener {
+    private OnClickListener mItemClickCallback = new OnClickListener() {
+        @Override
+        public void onClick(android.view.View v) {
+            if (mOnItemClickListener != null) {
+                mOnItemClickListener.onItemClicked(mCurPositon, v);
+            }
+            mViewDragHelper.setDragState(ViewDragHelper.STATE_IDLE);
+            if (mFlingListener != null) {
+                mFlingListener.onEndDragCard();
+            }
+        }
+    };
+
+    private static class SwipeChildContainer extends FrameLayout {
+
+        private boolean canCallbackForScroll = true;
+
+        public SwipeChildContainer(Context context, AttributeSet attrs) {
+            super(context, attrs);
+            setClipChildren(false);
+        }
+
+        public void setCanCallbackForScroll(boolean canCallbackForScroll) {
+            this.canCallbackForScroll = canCallbackForScroll;
+        }
+
+        public boolean isCanCallbackForScroll() {
+            return canCallbackForScroll;
+        }
+
+        @Override
+        public void setOnTouchListener(OnTouchListener l) {
+            super.setOnTouchListener(l);
+        }
+
+        @Override
+        public boolean dispatchTouchEvent(MotionEvent ev) {
+            if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+                getParent().getParent().requestDisallowInterceptTouchEvent(true);
+            }
+            return super.dispatchTouchEvent(ev);
+        }
+    }
+
+    private class SwipeLayoutParame extends FrameLayout.LayoutParams {
+
+        int position;
+
+        public SwipeLayoutParame(Context c, AttributeSet attrs) {
+            super(c, attrs);
+        }
+
+        public SwipeLayoutParame(int width, int height) {
+            super(width, height);
+        }
+
+        public SwipeLayoutParame(SwipeLayoutParame source) {
+            super((MarginLayoutParams) source);
+            this.gravity = source.gravity;
+        }
+    }
+
+    private class MoveDetector extends GestureDetector.SimpleOnGestureListener {
 
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float dx,
@@ -1415,18 +1237,227 @@ public class SwipeFlingViewNew extends AdapterView {
         }
     }
 
-    private OnClickListener mItemClickCallback = new OnClickListener() {
-        @Override
-        public void onClick(android.view.View v) {
-            if (mOnItemClickListener != null) {
-                mOnItemClickListener.onItemClicked(mCurPositon, v);
-            }
-            mViewDragHelper.setDragState(ViewDragHelper.STATE_IDLE);
-            if (mFlingListener != null) {
-                mFlingListener.onEndDragCard();
+    private class RecycleBin {
+        private ArrayList<View> mActiveViews;
+        private View mRecycleView;
+
+        RecycleBin() {
+            mActiveViews = new ArrayList(MAX_VISIBLE);
+            for (int i = 0; i < MAX_VISIBLE; i++) {
+                mActiveViews.add(null);
             }
         }
-    };
 
+        boolean isTopView(View view) {
+            int index = mActiveViews.indexOf(view);
+            if (index == mActiveViews.size() - 1) {
+                return true;
+            }
+            return false;
+        }
+
+        void addActiveView(View view, int pos) {
+            if (DEBUG) {
+                pritfViews("preadd");
+            }
+            View itemView = mActiveViews.set(pos, view);
+            if (DEBUG) {
+                pritfViews("postadd");
+            }
+        }
+
+        void removeAndAddLastActiveView(View oldView, View newView) {
+            for (int i = 0; i < mActiveViews.size(); i++) {
+                if (oldView == mActiveViews.get(i)) {
+                    mActiveViews.remove(i);
+                    resetChildView(oldView);
+                    if (DEBUG) {
+                        pritfViews("removeAndAddLastActiveView remove");
+                    }
+                    break;
+                }
+            }
+
+            if (newView != null) {
+                mActiveViews.add(newView);
+            }
+
+            if (DEBUG) {
+                pritfViews("removeAndAddLastActiveView add");
+            }
+        }
+
+        void removeActiveView(View view) {
+            if (view == null) return;
+            for (int i = mActiveViews.size() - 1; i >= 0; i--) {
+                if (view == mActiveViews.get(i)) {
+                    mActiveViews.remove(i);
+                    mRecycleView = view;
+                    resetChildView(mRecycleView);
+                    mActiveViews.add(0, null);
+                    if (DEBUG) {
+                        pritfViews("removeActiveView:" + i);
+                    }
+                    break;
+                }
+            }
+        }
+
+        View getActiveView(int pos) {
+            return mActiveViews.get(pos);
+        }
+
+        View getLastActiveView() {
+            if (mActiveViews.size() == MAX_VISIBLE) {
+                return mActiveViews.get(0);
+            }
+            return null;
+        }
+
+        View getAndResetRecycleView() {
+            View view = mRecycleView;
+            mRecycleView = null;
+            return view;
+        }
+
+        View getRecycleView() {
+            return mRecycleView;
+        }
+
+        void resetRecycleView() {
+            this.mRecycleView = null;
+        }
+
+        /**
+         * 从mActiveViews集合里查询是否有一个已存在的view
+         * @return 若mActiveViews全为空 返回true
+         */
+        boolean hasActiveView() {
+            if (mAdapter == null || mActiveViews.size() == 0) {
+                return false;
+            }
+
+            int count = mActiveViews.size();
+            int num = 0;
+            for (int i = 0; i < count; i++) {
+                if (mActiveViews.get(i) == null) {
+                    ++num;
+                }
+            }
+            if (num == count) {
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * 清空所以缓存的view
+         */
+        void clearCache() {
+            for (int i = 0; i < MAX_VISIBLE; i++) {
+                mActiveViews.set(i, null);
+            }
+            mRecycleView = null;
+        }
+
+        private void pritfViews(String tag) {
+            if (DEBUG) {
+                String ss = tag + " activeviews:";
+                for (int i = 0; i < mActiveViews.size(); i++) {
+                    ss += (mActiveViews.get(i) != null ?
+                            converChildView(mActiveViews.get(i)).getTag() : null) + ">>";
+                }
+                log(ss);
+            }
+        }
+
+    }
+
+    public interface OnItemClickListener {
+        void onItemClicked(int itemPosition, Object dataObject);
+    }
+
+    public interface onSwipeListener {
+
+        //void onStart(SwipeFlingViewNew swipeFlingView);
+
+        /**
+         * 拖拽开始时调用
+         */
+        void onStartDragCard();
+
+        /**
+         * 用来判断是否允许卡片向左离开(fling)
+         * @return true:允许卡片向左离开(fling)
+         */
+        boolean canLeftCardExit();
+
+        /**
+         * 用来判断是否允许卡片向右离开(fling)
+         * @return true:允许卡片向右离开(fling)
+         */
+        boolean canRightCardExit();
+
+        /**
+         * 在卡片即将要离开(fling)前，会回调此函数
+         */
+        void onPreCardExit();
+
+        /**
+         * 在卡片向左完全离开时，会回调此函数
+         * @param view 当前的view
+         * @param dataObject
+         * @param triggerByTouchMove 若true:表示此次卡片离开是来之于手势拖拽 反之则来之于点击按钮触发之类的
+         */
+        void onLeftCardExit(View view, Object dataObject, boolean triggerByTouchMove);
+
+        /**
+         * 在卡片向右完全离开时，会回调此函数
+         * @param view 当前的view
+         * @param dataObject
+         * @param triggerByTouchMove 若true:表示此次卡片离开是来之于手势拖拽 反之则来之于点击按钮触发之类的
+         */
+        void onRightCardExit(View view, Object dataObject, boolean triggerByTouchMove);
+
+        /**
+         * 在卡片完全离开时，若来之于superlike，会回调此函数
+         * @param view 当前的view
+         * @param dataObject
+         * @param triggerByTouchMove 若true:表示此次卡片离开是来之于手势拖拽 反之则来之于点击按钮触发之类的
+         */
+        void onSuperLike(View view, Object dataObject, boolean triggerByTouchMove);
+
+        /**
+         * 在顶部卡片划走时，会刷新布局，将设置顶部下面的卡片为顶部卡片，此时会回调此函数
+         */
+        void onTopCardViewFinish();
+
+        /**
+         * 当剩余卡片数等于{@link SwipeFlingViewNew#MIN_ADAPTER_STACK}时，会回调此函数
+         * 意味着卡片即将划完了，在这个时机可以做预加载下一批数据的工作
+         * @param itemsInAdapter
+         */
+        void onAdapterAboutToEmpty(int itemsInAdapter);
+
+        /**
+         * 当所有卡片都划完了，就回调此函数
+         */
+        void onAdapterEmpty();
+
+        /**
+         * 卡片因拖拽或动画发生位移时，会实时回调此函数
+         * @param selectedView 发生位移的view
+         * @param scrollProgressPercent 范围[-1,1] 默认是0 向左位移是0->-1,向右位移是0->1.
+         *        左侧最大值由{@link #leftBorder()}决定，右侧最大值由{@link #rightBorder()} ()}决定，
+         */
+        void onScroll(View selectedView, float scrollProgressPercent);
+
+        /**
+         * 拖拽结束时调用
+         */
+        void onEndDragCard();
+
+        //void onEnd();
+    }
 }
 

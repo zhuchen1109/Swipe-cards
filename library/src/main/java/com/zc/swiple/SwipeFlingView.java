@@ -151,7 +151,7 @@ public class SwipeFlingView extends AdapterView {
         mInLayout = true;
         final int adapterCount = mAdapter.getCount();
 
-        log("onLayout hasVaildBin:" + mRecycleBin.isVaildBin() + ";mCurPositon:" + mCurPositon + ";adapterCount:" + adapterCount);
+        log("onLayout hasActiveView:" + mRecycleBin.isVaildBin() + ";mCurPositon:" + mCurPositon + ";adapterCount:" + adapterCount);
         if (adapterCount == 0 || mCurPositon >= adapterCount) {
             removeAllViewsInLayout();
         } else {
@@ -923,7 +923,7 @@ public class SwipeFlingView extends AdapterView {
             }
 
             if (DEBUG) {
-                //pritfViews("hasVaildBin");
+                //pritfViews("hasActiveView");
             }
 
             int count = mActiveViews.size();

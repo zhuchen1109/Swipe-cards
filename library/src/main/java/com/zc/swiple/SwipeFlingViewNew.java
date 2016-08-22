@@ -32,14 +32,14 @@ import java.util.ArrayList;
  */
 public class SwipeFlingViewNew extends AdapterView {
 
-    private final static boolean DEBUG = true;
+    protected final static boolean DEBUG = true;
     private final static String TAG = SwipeFlingViewNew.class.getSimpleName();
     private final static int TOUCH_ABOVE = 0;
     private final static int TOUCH_BELOW = 1;
     private final static int MIN_FLING_VELOCITY = 300;//dips
-    private int mExitAnimDurationByClick  = 300;
+    private int mExitAnimDurationByClick = 300;
     private int mEnterAnimDurationByClick = 300;
-    private int mResetChildAnimDuration   = 300;
+    private int mResetChildAnimDuration = 300;
 
     private int MAX_VISIBLE = 4;//最多可显示的卡片数
     private int MIN_ADAPTER_STACK = 3;
@@ -233,16 +233,6 @@ public class SwipeFlingViewNew extends AdapterView {
         }
 
         mInLayout = false;
-
-        //-----
-        /*View topCard = getChildAt(LAST_OBJECT_IN_STACK);
-        if (topCard != null) {
-            mOriginTopViewX = topCard.getLeft();
-            mOriginTopViewY = topCard.getTop();
-            mCardWidth = topCard.getWidth();
-            mCardHalfWidth = mCardWidth * .5f;
-            Log.d("xxxx", "mOriginTopViewX:"+mOriginTopViewX+";mOriginTopViewY:"+mOriginTopViewY);
-        }*/
     }
 
     private void layoutChildren(int startingIndex, int adapterCount) {
@@ -894,7 +884,11 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     protected void onViewCaptured(View capturedChild, int activePointerId) {
-        updateActiveViewData(capturedChild);
+        boolean isResetChildAnimaRunning = mResetChildAnima != null && mResetChildAnima.isRunning();
+        if (isResetChildAnimaRunning) {
+            mResetChildAnima.cancel();
+        }
+        updateActiveViewData(capturedChild, !isResetChildAnimaRunning);
         setCanCallbackForScroll(capturedChild, true);
         if (mFlingListener != null) {
             mFlingListener.onStartDragCard();
@@ -1009,7 +1003,7 @@ public class SwipeFlingViewNew extends AdapterView {
 
     private boolean isCanCallbackForScroll(View releasedChild) {
         if (releasedChild instanceof SwipeChildContainer) {
-           return ((SwipeChildContainer) releasedChild).isCanCallbackForScroll();
+            return ((SwipeChildContainer) releasedChild).isCanCallbackForScroll();
         }
         return true;
     }
@@ -1081,10 +1075,10 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     private void updateActiveViewData() {
-        updateActiveViewData(null);
+        updateActiveViewData(null, true);
     }
 
-    private void updateActiveViewData(View capturedView) {
+    private void updateActiveViewData(View capturedView, boolean forceUpdate) {
         View activeView = capturedView;
         if (activeView == null) {
             activeView = mActiveCard;
@@ -1092,6 +1086,13 @@ public class SwipeFlingViewNew extends AdapterView {
         if (activeView == null) {
             return;
         }
+        if (!forceUpdate && mOriginTopViewX > 0 && mOriginTopViewX < getWidth() / 2
+                && mOriginTopViewY > 0 && mOriginTopViewY < getHeight() / 2) {
+            log("ignore updateActiveViewData.forceUpdate=false,mOriginTopViewX:" + mOriginTopViewX
+                    + ",mOriginTopViewY:" + mOriginTopViewY);
+            return;
+        }
+
         mOriginTopViewX = activeView.getLeft();
         mOriginTopViewY = activeView.getTop();
         mCardWidth = activeView.getWidth();
@@ -1121,11 +1122,6 @@ public class SwipeFlingViewNew extends AdapterView {
             @Override
             public void onAnimationStart(Animator animation) {
                 super.onAnimationStart(animation);
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                onEnd();
             }
 
             @Override
@@ -1330,6 +1326,7 @@ public class SwipeFlingViewNew extends AdapterView {
 
         /**
          * 从mActiveViews集合里查询是否有一个已存在的view
+         *
          * @return 若mActiveViews全为空 返回true
          */
         boolean hasActiveView() {
@@ -1388,12 +1385,14 @@ public class SwipeFlingViewNew extends AdapterView {
 
         /**
          * 用来判断是否允许卡片向左离开(fling)
+         *
          * @return true:允许卡片向左离开(fling)
          */
         boolean canLeftCardExit();
 
         /**
          * 用来判断是否允许卡片向右离开(fling)
+         *
          * @return true:允许卡片向右离开(fling)
          */
         boolean canRightCardExit();
@@ -1405,7 +1404,8 @@ public class SwipeFlingViewNew extends AdapterView {
 
         /**
          * 在卡片向左完全离开时，会回调此函数
-         * @param view 当前的view
+         *
+         * @param view               当前的view
          * @param dataObject
          * @param triggerByTouchMove 若true:表示此次卡片离开是来之于手势拖拽 反之则来之于点击按钮触发之类的
          */
@@ -1413,7 +1413,8 @@ public class SwipeFlingViewNew extends AdapterView {
 
         /**
          * 在卡片向右完全离开时，会回调此函数
-         * @param view 当前的view
+         *
+         * @param view               当前的view
          * @param dataObject
          * @param triggerByTouchMove 若true:表示此次卡片离开是来之于手势拖拽 反之则来之于点击按钮触发之类的
          */
@@ -1421,7 +1422,8 @@ public class SwipeFlingViewNew extends AdapterView {
 
         /**
          * 在卡片完全离开时，若来之于superlike，会回调此函数
-         * @param view 当前的view
+         *
+         * @param view               当前的view
          * @param dataObject
          * @param triggerByTouchMove 若true:表示此次卡片离开是来之于手势拖拽 反之则来之于点击按钮触发之类的
          */
@@ -1435,6 +1437,7 @@ public class SwipeFlingViewNew extends AdapterView {
         /**
          * 当剩余卡片数等于{@link SwipeFlingViewNew#MIN_ADAPTER_STACK}时，会回调此函数
          * 意味着卡片即将划完了，在这个时机可以做预加载下一批数据的工作
+         *
          * @param itemsInAdapter
          */
         void onAdapterAboutToEmpty(int itemsInAdapter);
@@ -1446,9 +1449,10 @@ public class SwipeFlingViewNew extends AdapterView {
 
         /**
          * 卡片因拖拽或动画发生位移时，会实时回调此函数
-         * @param selectedView 发生位移的view
+         *
+         * @param selectedView          发生位移的view
          * @param scrollProgressPercent 范围[-1,1] 默认是0 向左位移是0->-1,向右位移是0->1.
-         *        左侧最大值由{@link #leftBorder()}决定，右侧最大值由{@link #rightBorder()} ()}决定，
+         *                              左侧最大值由{@link #leftBorder()}决定，右侧最大值由{@link #rightBorder()} ()}决定，
          */
         void onScroll(View selectedView, float scrollProgressPercent);
 

@@ -53,7 +53,7 @@ class SwipeFlingDragCallBack extends ViewDragHelper.Callback {
     public int getViewHorizontalDragRange(View child) {
         // 这个用来控制拖拽过程中松手后，自动滑行的速度
         if (DEBUG) {
-            Log.d(TAG, "getViewHorizontalDragRange");
+            //Log.d(TAG, "getViewHorizontalDragRange");
         }
         return 0;
     }
@@ -65,6 +65,9 @@ class SwipeFlingDragCallBack extends ViewDragHelper.Callback {
 
     @Override
     public void onViewReleased(View releasedChild, float xvel, float yvel) {
+        if (DEBUG) {
+            Log.d(TAG, "onViewReleased");
+        }
         mDragView.onViewReleased(releasedChild, xvel, yvel);
     }
 

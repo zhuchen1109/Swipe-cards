@@ -45,6 +45,7 @@ public class SwipeFlingViewNew extends AdapterView {
     private int MIN_ADAPTER_STACK = 3;
     private int mMinFlingVelocity;
     private int mMinTouchSlop;
+    private int mCardDeviation;//卡片最大偏移误差值
     private float MAX_COS;
     private float ROTATION_DEGREES = 15.f;//卡片在拖拽或动画时 最大旋转角度
     private float SCALE_STEP = 0.1f;//定义卡片每级缩放的比例
@@ -111,6 +112,7 @@ public class SwipeFlingViewNew extends AdapterView {
         mViewDragHelper = ViewDragHelper.create(this, 1, new SwipeFlingDragCallBack(this));
         mRecycleBin = new RecycleBin();
 
+        mCardDeviation = (int) (3.f * density);
         mCardVerticalOffset = 6f * density;
         CHILD_SCALE_BY_INDEX = new float[MAX_VISIBLE];
         CHILD_VERTICAL_OFFSET_BY_INDEX = new float[MAX_VISIBLE];
@@ -749,6 +751,15 @@ public class SwipeFlingViewNew extends AdapterView {
             // action_down时就让mDragHelper开始工作，否则有时候导致异常
             mViewDragHelper.processTouchEvent(ev);
         }
+
+        //在拖拽卡片松手后，又快速的点击(是点击哦，要是移动了一小段距离则不会有问题)卡片，
+        // 因事件拦截机制，卡片会定在某个位置，不会回到正常位置，此处为解决这个问题
+        if (mActiveCard != null && hasValidActiveViewData()) {
+            if (Math.abs(mActiveCard.getLeft() - mOriginTopViewX) > mCardDeviation
+                    || Math.abs(mActiveCard.getTop() - mOriginTopViewY) > mCardDeviation) {
+                moveFlag = true;
+            }
+        }
         return should && moveFlag;
     }
 
@@ -1086,8 +1097,7 @@ public class SwipeFlingViewNew extends AdapterView {
         if (activeView == null) {
             return;
         }
-        if (!forceUpdate && mOriginTopViewX > 0 && mOriginTopViewX < getWidth() / 2
-                && mOriginTopViewY > 0 && mOriginTopViewY < getHeight() / 2) {
+        if (!forceUpdate && hasValidActiveViewData()) {
             log("ignore updateActiveViewData.forceUpdate=false,mOriginTopViewX:" + mOriginTopViewX
                     + ",mOriginTopViewY:" + mOriginTopViewY);
             return;
@@ -1099,6 +1109,15 @@ public class SwipeFlingViewNew extends AdapterView {
         mCardHalfWidth = mCardWidth / 2;
     }
 
+    /**
+     * 当前保存ActiveView的原始top/left值 是否是有效的值
+     * @return
+     */
+    private boolean hasValidActiveViewData() {
+        return mOriginTopViewX > 0 && mOriginTopViewX < getWidth() / 2
+                && mOriginTopViewY > 0 && mOriginTopViewY < getHeight() / 2;
+    }
+
     private void resetReleasedChildPos(final View releasedChild, int originX, int originY) {
         if (mResetChildAnima != null && mResetChildAnima.isRunning()) {
             mResetChildAnima.cancel();
@@ -1107,6 +1126,8 @@ public class SwipeFlingViewNew extends AdapterView {
         final int curY = releasedChild.getTop();
         final int dx = originX - curX;
         final int dy = originY - curY;
+        log("resetReleasedChildPos originX:" + originX + ",originY:"
+                + originY + ",curX:" + curX + ",curY:" + curY);
 
         mResetChildAnima = ValueAnimator.ofFloat(0.f, 1.f);
         mResetChildAnima.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -1219,7 +1240,7 @@ public class SwipeFlingViewNew extends AdapterView {
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float dx,
                                 float dy) {
             // 拖动了，touch不往下传递
-            return Math.abs(dy) + Math.abs(dx) > mMinTouchSlop;
+            return true;
         }
 
         @Override

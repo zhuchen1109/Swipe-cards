@@ -73,7 +73,7 @@ public class SwipeFlingViewNew extends AdapterView {
     private int mCardHalfWidth;
     private int mCardHeight;
     private boolean mInLayout = false;
-    private boolean isAnimationRunning = false;
+    private boolean isSelectedAnimationRunning = false;
 
     private View mActiveCard = null;
     private RecycleBin mRecycleBin;
@@ -84,6 +84,7 @@ public class SwipeFlingViewNew extends AdapterView {
     private ViewDragHelper mViewDragHelper;
     private GestureDetectorCompat mMoveDetector;
     private ValueAnimator mResetChildAnima;
+    private ValueAnimator mSelectedAnimator;
     private ArrayList<View> mReleasedViewList = new ArrayList<>();
 
     public SwipeFlingViewNew(Context context) {
@@ -640,7 +641,11 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     public boolean isAnimationRunning() {
-        return isAnimationRunning || mViewDragHelper.getViewDragState() != ViewDragHelper.STATE_IDLE;
+        return isSelectedAnimationRunning() || mViewDragHelper.getViewDragState() != ViewDragHelper.STATE_IDLE;
+    }
+
+    public boolean isSelectedAnimationRunning() {
+        return isSelectedAnimationRunning;
     }
 
     public void setMaxVisible(int MAX_VISIBLE) {
@@ -750,7 +755,9 @@ public class SwipeFlingViewNew extends AdapterView {
                 mTouchPosition = TOUCH_BELOW;
             }
             // ACTION_DOWN的时候就对view重新排序
-            resetChildren();
+            if (mSelectedAnimator == null || (mSelectedAnimator != null && !mSelectedAnimator.isRunning())) {
+                resetChildren();
+            }
             // 保存初次按下时arrowFlagView的Y坐标
             // action_down时就让mDragHelper开始工作，否则有时候导致异常
             mViewDragHelper.processTouchEvent(ev);
@@ -913,7 +920,9 @@ public class SwipeFlingViewNew extends AdapterView {
         if (isResetChildAnimaRunning) {
             mResetChildAnima.cancel();
         }
-        updateActiveViewData(capturedChild, !isResetChildAnimaRunning);
+        //这个地方forceUpdate要设置为false，在屏幕边缘滑动再快速点击卡片，
+        // 可能导致事件处理抛异常，导致draghelper返回错误的处理结果
+        updateActiveViewData(capturedChild, false);
         setCanCallbackForScroll(capturedChild, true);
         if (mFlingListener != null) {
             mFlingListener.onStartDragCard();
@@ -950,7 +959,7 @@ public class SwipeFlingViewNew extends AdapterView {
         if (mActiveCard == null) {
             return;
         }
-        isAnimationRunning = true;
+        isSelectedAnimationRunning = true;
 
         final int width = getWidth();
         int halfHeight = getHeight() / 2;
@@ -970,6 +979,7 @@ public class SwipeFlingViewNew extends AdapterView {
             exitY = -halfHeight;
         }
 
+        log("onSelected releasedChild:" + releasedChild);
         mReleasedViewList.add(releasedChild);
 
         if (mFlingListener != null) {
@@ -984,8 +994,8 @@ public class SwipeFlingViewNew extends AdapterView {
         } else {
             final float finalX = exitX;
             //final int finalY = exitY;
-            ValueAnimator animator = ValueAnimator.ofFloat(0.f, 1.f);
-            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            mSelectedAnimator = ValueAnimator.ofFloat(0.f, 1.f);
+            mSelectedAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {
                     float frac = animation.getAnimatedFraction();
@@ -994,7 +1004,7 @@ public class SwipeFlingViewNew extends AdapterView {
                     onScroll(releasedChild, true, frac, isCallbackByOnScroll);
                 }
             });
-            animator.addListener(new AnimatorListenerAdapter() {
+            mSelectedAnimator.addListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationStart(Animator animation) {
                     super.onAnimationStart(animation);
@@ -1012,11 +1022,11 @@ public class SwipeFlingViewNew extends AdapterView {
 
                 private void onEnd() {
                     onCardExited(isLeft, triggerByTouchMove, isSuperLike);
-                    isAnimationRunning = false;
+                    isSelectedAnimationRunning = false;
                 }
             });
-            animator.setDuration(mExitAnimDurationByClick);
-            animator.start();
+            mSelectedAnimator.setDuration(mExitAnimDurationByClick);
+            mSelectedAnimator.start();
         }
     }
 
@@ -1045,7 +1055,7 @@ public class SwipeFlingViewNew extends AdapterView {
             synchronized (this) {
                 onCardExited(isLeft, triggerByTouchMove, isSuperLike);
                 // 动画结束
-                isAnimationRunning = false;
+                isSelectedAnimationRunning = false;
             }
         }
     }
@@ -1054,6 +1064,7 @@ public class SwipeFlingViewNew extends AdapterView {
      * 卡片向二侧飞出动画完成时回调
      */
     private void onCardExited(final boolean isLeft, final boolean triggerByTouchMove, final boolean isSuperLike) {
+        log("onCardExited triggerByTouchMove:" + triggerByTouchMove);
         resetChildren();
 
         if (mFlingListener != null) {
@@ -1087,6 +1098,14 @@ public class SwipeFlingViewNew extends AdapterView {
         if (mReleasedViewList.size() == 0) {
             return;
         }
+        View waitRemoveView =  mReleasedViewList.get(0);
+        log("resetChildren waitRemoveView left:" + waitRemoveView.getLeft()
+                + ";getTranslationX:" + waitRemoveView.getTranslationX());
+        /*if (waitRemoveView.getLeft() == mOriginTopViewX
+                && waitRemoveView.getTranslationX() != 0) {
+            mReleasedViewList.remove(0);
+            return;
+        }*/
         View activeCard = mReleasedViewList.remove(0);
         if (activeCard == null) {
             return;

@@ -1,8 +1,7 @@
-package com.example.swipecards.ui;
+package com.example.swipecards.swipe;
 
 import android.app.Activity;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +11,9 @@ import android.widget.TextView;
 import com.example.swipecards.R;
 import com.example.swipecards.util.CardEntity;
 import com.example.swipecards.util.ImageLoaderHandler;
+import com.example.swipecards.view.CardImageView;
+import com.example.swipecards.view.CardLayout;
+import com.example.swipecards.view.SwipeIndicatorView;
 
 import java.util.ArrayList;
 

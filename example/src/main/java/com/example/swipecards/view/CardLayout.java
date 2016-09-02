@@ -1,4 +1,4 @@
-package com.example.swipecards.ui;
+package com.example.swipecards.view;
 
 import android.content.Context;
 import android.util.AttributeSet;

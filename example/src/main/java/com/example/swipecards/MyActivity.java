@@ -1,9 +1,9 @@
-package com.example.swipecards.ui;
+package com.example.swipecards;
 
 import android.app.Activity;
 import android.os.Bundle;
 
-import com.example.swipecards.R;
+import com.example.swipecards.swipe.CardFragment;
 
 import butterknife.ButterKnife;
 

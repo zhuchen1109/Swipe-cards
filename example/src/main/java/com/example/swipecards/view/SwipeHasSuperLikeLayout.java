@@ -1,4 +1,4 @@
-package com.example.swipecards.ui;
+package com.example.swipecards.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -7,6 +7,7 @@ import android.widget.FrameLayout;
 
 /**
  * 被superlike的卡片显示superlike的视图
+ *
  * @zc
  */
 public class SwipeHasSuperLikeLayout extends FrameLayout {

@@ -9,10 +9,6 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.ImageView;
 
-/**
- * 首页底部like/unlike switch view
- * @ZC
- */
 public class BottomSwitchView extends ImageView {
 
     private final static float DRAG_MAX_SCALE = 1.1f;

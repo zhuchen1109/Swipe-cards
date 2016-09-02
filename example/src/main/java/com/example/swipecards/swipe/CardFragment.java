@@ -1,4 +1,4 @@
-package com.example.swipecards.ui;
+package com.example.swipecards.swipe;
 
 import android.app.Fragment;
 import android.os.Bundle;

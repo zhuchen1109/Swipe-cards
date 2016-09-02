@@ -1,4 +1,4 @@
-package com.example.swipecards.ui;
+package com.example.swipecards.view;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -9,13 +9,10 @@ import android.widget.ImageView;
 
 /**
  * swipe fling view跟手滑动时，like/unlike的view
+ *
  * @zc
  */
 public class SwipeIndicatorView extends ImageView {
-
-    //private static int mLikeRes = R.drawable.icon_like_float;
-    //private static int mUnLikeRes = R.drawable.icon_unlike_float;
-    //private int mCurImgRes = 0;
 
     private float mCurPercent = -100.f;//当前设置的alpha值
 
@@ -52,7 +49,7 @@ public class SwipeIndicatorView extends ImageView {
         }*/
 
         float absPer = Math.abs(scrollProgressPercent);
-        int alpha = (int)(0xFF * absPer);
+        int alpha = (int) (0xFF * absPer);
         setImageViewAlpha(this, alpha);
     }
 

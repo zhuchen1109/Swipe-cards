@@ -6,6 +6,7 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.database.DataSetObserver;
+import android.graphics.Rect;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewCompat;
@@ -74,6 +75,7 @@ public class SwipeFlingViewNew extends AdapterView {
     private int mCardHeight;
     private boolean mInLayout = false;
     private boolean isSelectedAnimationRunning = false;
+    private Rect mChildRect;
 
     private View mActiveCard = null;
     private RecycleBin mRecycleBin;
@@ -235,6 +237,7 @@ public class SwipeFlingViewNew extends AdapterView {
             }
         }
 
+        correctionChildrenPosition();
         mInLayout = false;
     }
 
@@ -394,6 +397,10 @@ public class SwipeFlingViewNew extends AdapterView {
             default:
                 childTop = getPaddingTop() + lp.topMargin;
                 break;
+        }
+        if (mChildRect == null || mChildRect.isEmpty()) {
+            //保存child原始的大小
+            mChildRect = new Rect(childLeft, childTop, childLeft + w, childTop + h);
         }
         child.layout(childLeft, childTop, childLeft + w, childTop + h);
         return child;
@@ -657,6 +664,9 @@ public class SwipeFlingViewNew extends AdapterView {
     }
 
     public void setMinStackInAdapter(int minAdapterStack) {
+        if (minAdapterStack < 1) {
+            return;
+        }
         this.MIN_ADAPTER_STACK = minAdapterStack;
     }
 
@@ -757,6 +767,7 @@ public class SwipeFlingViewNew extends AdapterView {
             // ACTION_DOWN的时候就对view重新排序
             if (mSelectedAnimator == null || (mSelectedAnimator != null && !mSelectedAnimator.isRunning())) {
                 resetChildren();
+                correctionChildrenPosition();
             }
             // 保存初次按下时arrowFlagView的Y坐标
             // action_down时就让mDragHelper开始工作，否则有时候导致异常
@@ -1203,6 +1214,28 @@ public class SwipeFlingViewNew extends AdapterView {
             rotation = -rotation;
         }
         return rotation;
+    }
+
+    private void correctionChildrenPosition() {
+        View childView;
+        for (int i = 0; i < getChildCount(); i++) {
+            childView = getChildAt(i);
+            if ((mActiveCard != null && mActiveCard == childView)
+                    || (mViewDragHelper.getViewDragState() != ViewDragHelper.STATE_IDLE
+                    && mViewDragHelper.getCapturedView() == childView)) {
+                //nothing
+            } else if (childView != null
+                    && mChildRect != null && !mChildRect.isEmpty()
+                    && (childView.getLeft() != mChildRect.left
+                    || childView.getTop() != mChildRect.top
+                    || childView.getRight() != mChildRect.right
+                    || childView.getBottom() != mChildRect.bottom)) {
+                childView.setRotation(0);
+                childView.layout(mChildRect.left, mChildRect.top, mChildRect.right, mChildRect.bottom);
+            } else {
+                childView.setRotation(0);
+            }
+        }
     }
 
     private OnClickListener mItemClickCallback = new OnClickListener() {

@@ -3,18 +3,19 @@ package com.zc.swiple;
 import android.util.Log;
 import android.view.View;
 
-import static com.zc.swiple.SwipeFlingViewNew.DEBUG;
+import static com.zc.swiple.SwipeFlingView.DEBUG;
 
 /**
  * 拖拽事件回调处理
+ *
  * @zc
  */
 class SwipeFlingDragCallBack extends ViewDragHelper.Callback {
 
     private final static String TAG = SwipeFlingDragCallBack.class.getSimpleName();
-    private SwipeFlingViewNew mDragView;
+    private SwipeFlingView mDragView;
 
-    SwipeFlingDragCallBack(SwipeFlingViewNew view) {
+    SwipeFlingDragCallBack(SwipeFlingView view) {
         this.mDragView = view;
     }
 

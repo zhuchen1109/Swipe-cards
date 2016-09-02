@@ -13,29 +13,26 @@ import com.example.swipecards.util.CardEntity;
 import com.example.swipecards.util.RetrofitHelper;
 import com.example.swipecards.view.SwipeFlingBottomLayout;
 import com.zc.swiple.SwipeFlingView;
-import com.zc.swiple.SwipeFlingViewNew;
 
 import java.util.ArrayList;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 /**
  * 卡片Fragment
  *
  * @author zc
  */
-public class CardFragment extends Fragment implements SwipeFlingViewNew.onSwipeListener,
-        SwipeFlingBottomLayout.OnBottomItemClickListener, SwipeFlingViewNew.OnItemClickListener {
+public class CardFragment extends Fragment implements SwipeFlingView.onSwipeListener,
+        SwipeFlingBottomLayout.OnBottomItemClickListener, SwipeFlingView.OnItemClickListener {
 
     private final static String TAG = CardFragment.class.getSimpleName();
     private final static boolean DEBUG = true;
 
     @InjectView(R.id.frame)
-    SwipeFlingViewNew mSwipeFlingView;
+    SwipeFlingView mSwipeFlingView;
 
     @InjectView(R.id.swipe_fling_bottom)
     SwipeFlingBottomLayout mBottomLayout;

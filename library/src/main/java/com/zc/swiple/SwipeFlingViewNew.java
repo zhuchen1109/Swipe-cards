@@ -647,6 +647,10 @@ public class SwipeFlingViewNew extends AdapterView {
         this.MAX_VISIBLE = MAX_VISIBLE;
     }
 
+    public int getMaxVisibleCard() {
+        return MAX_VISIBLE;
+    }
+
     public void setMinStackInAdapter(int minAdapterStack) {
         this.MIN_ADAPTER_STACK = minAdapterStack;
     }
@@ -796,6 +800,16 @@ public class SwipeFlingViewNew extends AdapterView {
             mFlingListener.onScroll(converChildView(changedView), scrollProgressPercent);
         }
         updateChildrenOffset(isOffsetUp, scrollProgressPercent);
+    }
+
+    /**
+     * 针对广告 广告的点击事件是sdk内部处理的 导致组件内点击回调逻辑不能被执行 所以需要手动调用
+     */
+    public void complementClickEndEvent() {
+        mViewDragHelper.setDragState(ViewDragHelper.STATE_IDLE);
+        if (mFlingListener != null) {
+            mFlingListener.onEndDragCard();
+        }
     }
 
     /**

@@ -51,8 +51,8 @@ public class SwipeFlingView extends AdapterView {
     private float ROTATION_DEGREES = 15.f;//卡片在拖拽或动画时 最大旋转角度
     private float SCALE_STEP = 0.1f;//定义卡片每级缩放的比例
     private float mCardVerticalOffset = 0;//定义卡片每级偏移值
-    private float[] CHILD_SCALE_BY_INDEX;//存放各级卡片缩放系数集
-    private float[] CHILD_VERTICAL_OFFSET_BY_INDEX;//存放各级卡片偏移值集
+    private float[] CHILD_SCALE_BY_INDEX;//存放各级卡片缩放系数集 eg:0.79999995>>0.79999995>>0.9>>1.0>>
+    private float[] CHILD_VERTICAL_OFFSET_BY_INDEX;//存放各级卡片偏移值集 eg:36.0>>36.0>>18.0>>0.0>>
 
     /**
      * 用于记录当前卡片的索引，非常重要的属性
@@ -75,6 +75,7 @@ public class SwipeFlingView extends AdapterView {
     private int mCardHeight;
     private boolean mInLayout = false;
     private boolean isSelectedAnimationRunning = false;
+    private boolean enableScale = true;
     private Rect mChildRect;
 
     private View mActiveCard = null;
@@ -136,7 +137,7 @@ public class SwipeFlingView extends AdapterView {
             for (float f : CHILD_SCALE_BY_INDEX) {
                 log += f + ">>";
             }
-            String offset = "CHILD_VERTICAL_OFFSET_BY_INDEX:";
+            String offset = " CHILD_VERTICAL_OFFSET_BY_INDEX:";
             for (float f : CHILD_VERTICAL_OFFSET_BY_INDEX) {
                 offset += f + ">>";
             }
@@ -147,8 +148,7 @@ public class SwipeFlingView extends AdapterView {
         mMinTouchSlop = config.getScaledTouchSlop();
         mMinFlingVelocity = (int) (MIN_FLING_VELOCITY * density);
 
-        mMoveDetector = new GestureDetectorCompat(context,
-                new MoveDetector());
+        mMoveDetector = new GestureDetectorCompat(context, new MoveDetector());
         mMoveDetector.setIsLongpressEnabled(false);
     }
 
@@ -261,10 +261,7 @@ public class SwipeFlingView extends AdapterView {
     private void computeCardHeight() {
         if (mCardHeight > 0) return;
         mCardHeight = getChildAt(0).getHeight();
-
     }
-
-    boolean enableScale = true;
 
     private void scaleChildView(View newUnderChild, int startingIndex) {
         if (!enableScale) return;
@@ -278,6 +275,11 @@ public class SwipeFlingView extends AdapterView {
         newUnderChild.setTranslationY((originHeight - newHeight) * .5f + CHILD_VERTICAL_OFFSET_BY_INDEX[startingIndex]);
     }
 
+    /**
+     *
+     * @param isOffsetUp true:向上浮动 反之向下浮动
+     * @param scrollProgressPercent
+     */
     private void updateChildrenOffset(boolean isOffsetUp, float scrollProgressPercent) {
         if (!enableScale) return;
         float absPer = Math.abs(scrollProgressPercent);
@@ -312,10 +314,10 @@ public class SwipeFlingView extends AdapterView {
     }
 
     private View makeAndAddView(int pos, View view) {
-        return makeAndAddView(pos, view, false);
+        return makeAndAddView(pos, view, false, false, true);
     }
 
-    private View makeAndAddView(int pos, View view, boolean isAddFirstCard) {
+    private View makeAndAddView(int pos, View view, boolean isAddFirstCard, boolean fromComeback, boolean isLeft) {
         SwipeChildContainer child = null;
         SwipeLayoutParame lp = null;
         if (view.getParent() != null && view.getParent() instanceof SwipeChildContainer) {
@@ -326,10 +328,6 @@ public class SwipeFlingView extends AdapterView {
             lp = (SwipeLayoutParame) view.getLayoutParams();
         } else {
             SwipeLayoutParame viewLp = (SwipeLayoutParame) view.getLayoutParams();
-            //TODO 理论这个不应该为空 先屏蔽掉 看下测试结果
-            /*if (viewLp == null) {
-                viewLp = new SwipeLayoutParame(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-            }*/
             child = new SwipeChildContainer(getContext(), null);
             lp = new SwipeLayoutParame(viewLp);
             child.addView(view, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
@@ -351,7 +349,6 @@ public class SwipeFlingView extends AdapterView {
         } else {
             cleanupLayoutState(child);
         }
-
 
         int w = child.getMeasuredWidth();
         int h = child.getMeasuredHeight();
@@ -398,11 +395,20 @@ public class SwipeFlingView extends AdapterView {
                 childTop = getPaddingTop() + lp.topMargin;
                 break;
         }
-        if (mChildRect == null || mChildRect.isEmpty()) {
-            //保存child原始的大小
-            mChildRect = new Rect(childLeft, childTop, childLeft + w, childTop + h);
+        if (fromComeback) {
+            int widthOffset = (int) (w / MAX_COS - w);
+            if (isLeft) {
+                child.layout(-(w + widthOffset), childTop, -widthOffset, childTop + h);
+            } else {
+                child.layout(getWidth() + widthOffset, childTop, getWidth() + w + widthOffset, childTop + h);
+            }
+        } else {
+            if (mChildRect == null || mChildRect.isEmpty()) {
+                //保存child原始的大小
+                mChildRect = new Rect(childLeft, childTop, childLeft + w, childTop + h);
+            }
+            child.layout(childLeft, childTop, childLeft + w, childTop + h);
         }
-        child.layout(childLeft, childTop, childLeft + w, childTop + h);
         return child;
     }
 
@@ -475,125 +481,19 @@ public class SwipeFlingView extends AdapterView {
                 removeViewInLayout(lastView);
             }
             View newChild = mAdapter.getView(mCurPositon, converChildView(lastView), this);
-            //newChild.setVisibility(View.INVISIBLE);
-            newChild = addViewOfComebackCard(0, newChild, true, fromLeft);
-            mRecycleBin.removeAndAddLastActiveView(lastView, newChild);
-            //setTopView();
+            newChild = makeAndAddView(0, newChild, true, true, fromLeft);
+            mRecycleBin.removeAndAddFirstActiveView(lastView, newChild);
             startComeBackCardAnim(newChild, fromLeft, mEnterAnimDurationByClick);
-            //requestLayout();
         }
-    }
-
-    private View addViewOfComebackCard(int pos, View view, boolean isAddFirstCard, boolean isLeft) {
-        SwipeChildContainer child = null;
-        SwipeLayoutParame lp = null;
-        if (view.getParent() != null && view.getParent() instanceof SwipeChildContainer) {
-            child = (SwipeChildContainer) view.getParent();
-            lp = (SwipeLayoutParame) child.getLayoutParams();
-        } else if (view instanceof SwipeChildContainer) {
-            child = (SwipeChildContainer) view;
-            lp = (SwipeLayoutParame) view.getLayoutParams();
-        } else {
-            SwipeLayoutParame viewLp = (SwipeLayoutParame) view.getLayoutParams();
-            //TODO 理论这个不应该为空 先屏蔽掉 看下测试结果
-            /*if (viewLp == null) {
-                viewLp = new SwipeLayoutParame(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-            }*/
-            child = new SwipeChildContainer(getContext(), null);
-            lp = new SwipeLayoutParame(viewLp);
-            child.addView(view, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-            child.setOnClickListener(mItemClickCallback);
-        }
-        child.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        addViewInLayout(child, isAddFirstCard ? -1 : 0, lp, true);
-        lp.position = pos;
-
-        final boolean needToMeasure = child.isLayoutRequested();
-        if (needToMeasure) {
-            int childWidthSpec = getChildMeasureSpec(getWidthMeasureSpec(),
-                    getPaddingLeft() + getPaddingRight() + lp.leftMargin + lp.rightMargin,
-                    lp.width);
-            int childHeightSpec = getChildMeasureSpec(getHeightMeasureSpec(),
-                    getPaddingTop() + getPaddingBottom() + lp.topMargin + lp.bottomMargin,
-                    lp.height);
-            child.measure(childWidthSpec, childHeightSpec);
-        } else {
-            cleanupLayoutState(child);
-        }
-
-
-        int w = child.getMeasuredWidth();
-        int h = child.getMeasuredHeight();
-
-        int gravity = lp.gravity;
-        if (gravity == -1) {
-            gravity = Gravity.TOP | Gravity.START;
-        }
-
-        int layoutDirection = ViewCompat.getLayoutDirection(this);
-        final int absoluteGravity = Gravity.getAbsoluteGravity(gravity, layoutDirection);
-        final int verticalGravity = gravity & Gravity.VERTICAL_GRAVITY_MASK;
-
-        int childLeft;
-        int childTop;
-        switch (absoluteGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
-            case Gravity.CENTER_HORIZONTAL:
-                if (lp.width == LayoutParams.MATCH_PARENT) {
-                    w = getWidth() - (lp.leftMargin + lp.rightMargin);
-                    childLeft = getPaddingLeft() + lp.leftMargin;
-                } else {
-                    childLeft = (getWidth() + getPaddingLeft() - getPaddingRight() - w) / 2 +
-                            lp.leftMargin - lp.rightMargin;
-                }
-                break;
-            case Gravity.END:
-                childLeft = getWidth() + getPaddingRight() - w - lp.rightMargin;
-                break;
-            case Gravity.START:
-            default:
-                childLeft = getPaddingLeft() + lp.leftMargin;
-                break;
-        }
-        switch (verticalGravity) {
-            case Gravity.CENTER_VERTICAL:
-                childTop = (getHeight() + getPaddingTop() - getPaddingBottom() - h) / 2 +
-                        lp.topMargin - lp.bottomMargin;
-                break;
-            case Gravity.BOTTOM:
-                childTop = getHeight() - getPaddingBottom() - h - lp.bottomMargin;
-                break;
-            case Gravity.TOP:
-            default:
-                childTop = getPaddingTop() + lp.topMargin;
-                break;
-        }
-
-        int widthOffset = (int) (w / MAX_COS - w);
-        if (isLeft) {
-            child.layout(-(w + widthOffset), childTop, -widthOffset, childTop + h);
-        } else {
-            child.layout(getWidth() + widthOffset, childTop, getWidth() + w + widthOffset, childTop + h);
-        }
-        return child;
     }
 
     private void startComeBackCardAnim(final View frame, final boolean fromLeft, int duration) {
         MarginLayoutParams lp = ((MarginLayoutParams) frame.getLayoutParams());
         final int childLeft = getPaddingLeft() + lp.leftMargin;
         final int childTop = getPaddingTop() + lp.topMargin;
-        final float originX = childLeft;//frame.getX();
-        float originY = frame.getY();
-        float startY = frame.getY();
-        float startX;
-        if (fromLeft) {
-            startX = -frame.getWidth() - getRotationWidthOffset(frame);
-        } else {
-            startX = getWidth() + getRotationWidthOffset(frame);
-        }
+        final float originX = childLeft;
         final float rotation = getEnterRotation(frame, fromLeft);
 
-        //frame.setX(startX);
-        //frame.setY(startY);
         frame.setRotation(rotation);
 
         final float x = frame.getX();
@@ -608,22 +508,12 @@ public class SwipeFlingView extends AdapterView {
             }
         });
         anim.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                //frame.setVisibility(View.VISIBLE);
-            }
 
             @Override
             public void onAnimationEnd(Animator animation) {
                 frame.layout(childLeft, childTop, childLeft + frame.getWidth(), childTop + frame.getHeight());
                 resetChildView(frame);
-                //frame.requestLayout();
                 setTopView();
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                super.onAnimationCancel(animation);
             }
         });
         anim.setDuration(duration);
@@ -1100,7 +990,6 @@ public class SwipeFlingView extends AdapterView {
             mFlingListener.onAdapterAboutToEmpty(adapterCount);
         }
         if (adapterCount > 0 && adapterCount == mCurPositon) {
-            //mPositonByEmptyData = mCurPositon;
             mFlingListener.onAdapterEmpty();
         }
     }
@@ -1350,7 +1239,7 @@ public class SwipeFlingView extends AdapterView {
             }
         }
 
-        void removeAndAddLastActiveView(View oldView, View newView) {
+        void removeAndAddFirstActiveView(View oldView, View newView) {
             for (int i = 0; i < mActiveViews.size(); i++) {
                 if (oldView == mActiveViews.get(i)) {
                     mActiveViews.remove(i);

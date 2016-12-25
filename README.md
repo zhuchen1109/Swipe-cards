@@ -1,7 +1,7 @@
 # 有图有真相：
 
-https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/capture0.png
-https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/capture1.gif
+![DEMO截图](https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/capture0.png)
+![DEMO示例](https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/capture1.gif)
 
 
 
@@ -10,10 +10,10 @@ https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/capture1.gif
 
 主要代码：
 ```
-	mAdapter = new UserAdapter(getActivity(), mGrilList);
-      	mSwipeFlingView.setAdapter(mAdapter);
-       	mSwipeFlingView.setFlingListener(this);
-       	mSwipeFlingView.setOnItemClickListener(this);
+mAdapter = new UserAdapter(getActivity(), mGrilList);
+mSwipeFlingView.setAdapter(mAdapter);
+mSwipeFlingView.setFlingListener(this);
+mSwipeFlingView.setOnItemClickListener(this);
 ```
 
 
@@ -38,8 +38,8 @@ https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/capture1.gif
 这个项目在实际产品中经历过各种需求的洗礼，有着多轮的迭代优化，现在API已较为完善
 
 核心回调如下：
-、、、
 
+```
 public interface onSwipeListener {
 
         //void onStart(SwipeFlingViewNew swipeFlingView);
@@ -129,6 +129,6 @@ public interface onSwipeListener {
 
         //void onEnd();
     }
-、、、
+```
 
 

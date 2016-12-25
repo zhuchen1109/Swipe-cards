@@ -1,8 +1,7 @@
 # 有图有真相：
 
-
-<img src=“https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/capture0.png" width=“1440” height=“2560” /><br>
-<img src=“https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/capture1.gif” width=“382” height=“657” /><br>
+https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/capture0.png
+https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/capture1.gif
 
 
 
@@ -17,6 +16,8 @@
        	mSwipeFlingView.setOnItemClickListener(this);
 ```
 
+
+
 # 请允许我来给这个项目吹吹牛
 
 
@@ -30,12 +31,15 @@
 
 * 5.精细  卡片与卡片之间动画联动效果是像素级的
 
+
+
 # API说明：
 
 这个项目在实际产品中经历过各种需求的洗礼，有着多轮的迭代优化，现在API已较为完善
 
 核心回调如下：
 、、、
+
 public interface onSwipeListener {
 
         //void onStart(SwipeFlingViewNew swipeFlingView);

@@ -1,8 +1,8 @@
 # 有图有真相：
 
 
-<img src=“doc/capture0.jpg" width=“1440” height=“2560” /><br>
-<img src=“doc/capture1.gif” width=“382” height=“657” /><br>
+<img src=“https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/capture0.png" width=“1440” height=“2560” /><br>
+<img src=“https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/capture1.gif” width=“382” height=“657” /><br>
 
 
 

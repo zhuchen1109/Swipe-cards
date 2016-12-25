@@ -1,8 +1,9 @@
 # 有图有真相：
 
-
-<img src=“/doc/capture0.png” width=“720” height=“1280” /><br>
-<img src=“/doc/capture1.gif” width=“382” height=“657” /><br>
+<td>
+	<img src=“/doc/capture0.png” width=“720” height=“1280” /><br>
+  	<img src=“/doc/capture1.gif” width=“382” height=“657” />
+</td>
 
 
 # 如何使用（直接看demo工程，清晰易懂）：

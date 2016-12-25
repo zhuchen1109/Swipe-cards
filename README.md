@@ -1,10 +1,10 @@
 # 有图有真相：
 
 
-<img src=doc/capture0.png width=“720” height=“1280” /><br>
+<img src=doc/capture0.png width=“360” height=“640” /><br>
 <img src=doc/capture1.gif width=“382” height=“657” />
 
-![视频地址](http://v.youku.com/v_show/id_XMTg4MzMwNzYyNA==.html)
+[视频地址](http://v.youku.com/v_show/id_XMTg4MzMwNzYyNA==.html)
 
 # 如何使用（直接看demo工程，清晰易懂）：
 <a href=doc/demo.apk>DEMO体验下载</a>

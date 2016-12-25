@@ -1,7 +1,5 @@
 # 有图有真相：
 
-
-<img src=doc/capture0.png width=“360” height=“640” /><br>
 <img src=doc/capture1.gif width=“382” height=“657” />
 
 [视频地址](http://v.youku.com/v_show/id_XMTg4MzMwNzYyNA==.html)

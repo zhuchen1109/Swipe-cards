@@ -1,13 +1,13 @@
 # 有图有真相：
 
 <td>
-	<img src=“doc/capture0.png” width=“720” height=“1280” /><br>
-  	<img src=“doc/capture1.gif” width=“382” height=“657” />
+	<img src=“https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/capture0.png” width=“720” height=“1280” /><br>
+  	<img src=“https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/capture1.gif” width=“382” height=“657” />
 </td>
 
 
 # 如何使用（直接看demo工程，清晰易懂）：
-<a href=“doc/demo.apk”>DEMO体验下载</a>
+<a href=“https://github.com/zhuchen1109/Swipe-cards/blob/master/doc/demo.apk”>DEMO体验下载</a>
 
 主要代码：
 ```

@@ -39,7 +39,6 @@ public class ImageLoaderHandler {
     public void loadCardImage(Activity activity, ImageView iv, final View loadingView, final String url, final boolean isShowLoadWhenStarted) {
         Glide.with(activity)
                 .load(url)
-                //.error(isMan ? R.drawable.img_card_man_bg : R.drawable.img_card_woman_bg)
                 .dontAnimate()
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(new ImageViewTarget<GlideDrawable>(iv) {

@@ -6,8 +6,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.example.swipecards.R;
+import com.example.swipecards.test.TestData;
 import com.example.swipecards.util.BaseModel;
 import com.example.swipecards.util.CardEntity;
 import com.example.swipecards.util.RetrofitHelper;
@@ -62,6 +64,9 @@ public class CardFragment extends Fragment implements SwipeFlingView.onSwipeList
     }
 
     private void updateListView(ArrayList<CardEntity> list) {
+        if (list == null || list.size() == 0) {
+            return;
+        }
         mGrilList.addAll(list);
         mAdapter.notifyDataSetChanged();
     }
@@ -83,6 +88,8 @@ public class CardFragment extends Fragment implements SwipeFlingView.onSwipeList
             @Override
             public void onLoadFail(int statusCode) {
                 mIsRequestGirlList = false;
+                Toast.makeText(getActivity(), "API服务器请求失败,使用默认测试数据填充", Toast.LENGTH_LONG).show();
+                addTestData();
             }
 
             @Override
@@ -90,6 +97,10 @@ public class CardFragment extends Fragment implements SwipeFlingView.onSwipeList
                 mIsRequestGirlList = false;
             }
         });
+    }
+
+    private void addTestData() {
+        updateListView(TestData.getApiData(getActivity()));
     }
 
     @Override

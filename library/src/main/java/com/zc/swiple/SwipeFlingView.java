@@ -276,8 +276,7 @@ public class SwipeFlingView extends AdapterView {
     }
 
     /**
-     *
-     * @param isOffsetUp true:向上浮动 反之向下浮动
+     * @param isOffsetUp            true:向上浮动 反之向下浮动
      * @param scrollProgressPercent
      */
     private void updateChildrenOffset(boolean isOffsetUp, float scrollProgressPercent) {

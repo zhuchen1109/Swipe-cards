@@ -7,7 +7,6 @@ import com.example.swipecards.swipe.CardFragment;
 
 import butterknife.ButterKnife;
 
-
 public class MyActivity extends Activity {
 
     @Override

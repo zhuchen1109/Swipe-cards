@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="#FF7857FF"
+        android:background="@color/color_primary"
         android:gravity="center"
         android:text="SWIPE"
         android:textColor="#fff"

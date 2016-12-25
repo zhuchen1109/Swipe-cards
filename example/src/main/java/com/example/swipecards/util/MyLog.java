@@ -4,7 +4,6 @@ import android.util.Log;
 
 import com.example.swipecards.BuildConfig;
 
-
 /**
  * Log工具类.
  */

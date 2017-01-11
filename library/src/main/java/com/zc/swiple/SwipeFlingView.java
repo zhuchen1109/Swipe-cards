@@ -83,7 +83,7 @@ public class SwipeFlingView extends AdapterView {
     private Adapter mAdapter;
     private AdapterDataSetObserver mDataSetObserver;
     private OnItemClickListener mOnItemClickListener;
-    private onSwipeListener mFlingListener;
+    private OnSwipeFlingListener mFlingListener;
     private ViewDragHelper mViewDragHelper;
     private GestureDetectorCompat mMoveDetector;
     private ValueAnimator mResetChildAnima;
@@ -95,7 +95,7 @@ public class SwipeFlingView extends AdapterView {
     }
 
     public SwipeFlingView(Context context, AttributeSet attrs) {
-        this(context, attrs, R.attr.SwipeFlingStyle);
+        this(context, attrs, 0);
     }
 
     public SwipeFlingView(Context context, AttributeSet attrs, int defStyle) {
@@ -579,7 +579,7 @@ public class SwipeFlingView extends AdapterView {
         }
     }
 
-    public void setFlingListener(onSwipeListener onFlingListener) {
+    public void setOnSwipeFlingListener(OnSwipeFlingListener onFlingListener) {
         this.mFlingListener = onFlingListener;
     }
 
@@ -1350,7 +1350,7 @@ public class SwipeFlingView extends AdapterView {
         void onItemClicked(int itemPosition, Object dataObject);
     }
 
-    public interface onSwipeListener {
+    public interface OnSwipeFlingListener {
 
         //void onStart(SwipeFlingViewNew swipeFlingView);
 
@@ -1439,5 +1439,69 @@ public class SwipeFlingView extends AdapterView {
 
         //void onEnd();
     }
+
+    public class SimpleOnSwipeListener implements OnSwipeFlingListener {
+
+        @Override
+        public void onStartDragCard() {
+
+        }
+
+        @Override
+        public boolean canLeftCardExit() {
+            return true;
+        }
+
+        @Override
+        public boolean canRightCardExit() {
+            return true;
+        }
+
+        @Override
+        public void onPreCardExit() {
+
+        }
+
+        @Override
+        public void onLeftCardExit(View view, Object dataObject, boolean triggerByTouchMove) {
+
+        }
+
+        @Override
+        public void onRightCardExit(View view, Object dataObject, boolean triggerByTouchMove) {
+
+        }
+
+        @Override
+        public void onSuperLike(View view, Object dataObject, boolean triggerByTouchMove) {
+
+        }
+
+        @Override
+        public void onTopCardViewFinish() {
+
+        }
+
+        @Override
+        public void onAdapterAboutToEmpty(int itemsInAdapter) {
+
+        }
+
+        @Override
+        public void onAdapterEmpty() {
+
+        }
+
+        @Override
+        public void onScroll(View selectedView, float scrollProgressPercent) {
+
+        }
+
+        @Override
+        public void onEndDragCard() {
+
+        }
+    }
+
 }
 

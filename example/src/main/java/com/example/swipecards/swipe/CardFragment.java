@@ -27,7 +27,7 @@ import retrofit2.Call;
  *
  * @author zc
  */
-public class CardFragment extends Fragment implements SwipeFlingView.onSwipeListener,
+public class CardFragment extends Fragment implements SwipeFlingView.OnSwipeFlingListener,
         SwipeFlingBottomLayout.OnBottomItemClickListener, SwipeFlingView.OnItemClickListener {
 
     private final static String TAG = CardFragment.class.getSimpleName();
@@ -58,7 +58,7 @@ public class CardFragment extends Fragment implements SwipeFlingView.onSwipeList
     private void initView() {
         mAdapter = new UserAdapter(getActivity(), mGrilList);
         mSwipeFlingView.setAdapter(mAdapter);
-        mSwipeFlingView.setFlingListener(this);
+        mSwipeFlingView.setOnSwipeFlingListener(this);
         mSwipeFlingView.setOnItemClickListener(this);
         mBottomLayout.setOnBottomItemClickListener(this);
     }

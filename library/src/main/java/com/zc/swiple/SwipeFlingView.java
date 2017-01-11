@@ -33,7 +33,7 @@ import java.util.ArrayList;
  */
 public class SwipeFlingView extends AdapterView {
 
-    protected final static boolean DEBUG = true;
+    protected final static boolean DEBUG = false;
     private final static String TAG = SwipeFlingView.class.getSimpleName();
     private final static int TOUCH_ABOVE = 0;
     private final static int TOUCH_BELOW = 1;

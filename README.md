@@ -34,24 +34,24 @@ mSwipeFlingView.setOnItemClickListener(this);
 属性描述：
 
 ```
-app:max_visible  最大同时显示几张卡片
-app:min_adapter_stack 卡片剩余多少张时，开始加载下一页
-app:rotation_degrees 卡片拖拽中，最大的旋转角度
+app:max_visible        最大同时显示几张卡片
+app:min_adapter_stack  卡片剩余多少张时，开始加载下一页
+app:rotation_degrees   卡片拖拽中，最大的旋转角度
 ```
 
 
 # 请允许我来给这个项目吹吹牛
 
 
-* 1.易用  和使用listview一样方便，提供Adapter来定制视图
+* 1.易用     和使用listview一样方便，提供Adapter来定制视图
 
 * 2.视图复用  无论划多少页，全局只有4个卡片view
 
-* 3.流畅  再快的手势也永远感觉不到卡的刹那
+* 3.流畅     再快的手势也永远感觉不到卡的刹那
 
-* 4.高效  使用硬件加速方式更新拖拽视图，拖拽操作不使用invalidate（invalidate会重新生成FBO，使渲染效率降低）
+* 4.高效     使用硬件加速方式更新拖拽视图，拖拽操作不使用invalidate（invalidate会重新生成FBO，使渲染效率降低）
 
-* 5.精细  卡片与卡片之间动画联动效果是像素级的
+* 5.精细     卡片与卡片之间动画联动效果是像素级的
 
 
 

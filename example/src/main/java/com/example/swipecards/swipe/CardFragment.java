@@ -58,7 +58,7 @@ public class CardFragment extends Fragment implements SwipeFlingView.OnSwipeFlin
     private void initView() {
         mAdapter = new UserAdapter(getActivity(), mGrilList);
         mSwipeFlingView.setAdapter(mAdapter);
-        mSwipeFlingView.setOnSwipeFlingListener(this);
+        mSwipeFlingView.setOnSwipeFlingListener(this);//SimpleOnSwipeListener/OnSwipeListener
         mSwipeFlingView.setOnItemClickListener(this);
         mBottomLayout.setOnBottomItemClickListener(this);
     }

@@ -31,3 +31,9 @@ proguard/
 
 # Android Studio captures folder
 captures/
+
+example/gradle/
+example/gradlew
+example/gradlew.bat
+library/library.iml
+Swipe-cards.iml

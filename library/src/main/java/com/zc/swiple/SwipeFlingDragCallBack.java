@@ -30,7 +30,7 @@ class SwipeFlingDragCallBack extends ViewDragHelper.Callback {
         if (DEBUG) {
             Log.d(TAG, "tryCaptureView");
         }
-        return mDragView.tryCaptureView(child, pointerId);
+        return child == mDragView.getTopChild();
     }
 
     @Override
